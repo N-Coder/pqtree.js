@@ -91,6 +91,7 @@ function addColumn() {
     buildTable();
     update();
 }
+
 function addRow() {
     data.push(Array(n).fill(0));
     buildTable();
@@ -161,18 +162,19 @@ function copyMatrix() {
 function isdigit(str) {
     return /^\d+$/.test(str);
 }
+
 if (!Array.prototype.last) {
     Array.prototype.last = function () {
         return this[this.length - 1];
     };
-};
+}
 
 function pqTree(output) {
     // parse output
     if (output == "Impossible") {
         return null;
     }
-    var stack = [{ "type": "root", "children": [] }];
+    var stack = [{"type": "root", "children": []}];
     var reading_number = false;
     for (var i = 0; i < output.length; i++) {
         var char = output[i];
@@ -181,21 +183,23 @@ function pqTree(output) {
                 number = number + char;
                 continue;
             } else {
-                stack.last().children.push({ "type": "leaf", "value": parseInt(number) });
+                stack.last().children.push({"type": "leaf", "value": parseInt(number)});
                 reading_number = false;
             }
         }
         if (char == '(') {
-            stack.push({ "type": "pnode", "children": [] });
+            stack.last().children.pop(); // remove the number of the P-node
+            stack.push({"type": "pnode", "children": []});
         } else if (char == ')') {
             var node = stack.pop();
             stack.last().children.push(node);
         } else if (char == '[') {
-            stack.push({ "type": "qnode", "children": [] });
+            stack.last().children.pop(); // remove the number of the Q-node
+            stack.push({"type": "qnode", "children": []});
         } else if (char == ']') {
             var node = stack.pop();
             stack.last().children.push(node);
-        } else if (char == ' ') {
+        } else if (char == ' ' || char == ':' || char == ',') {
             continue;
         } else if (isdigit(char)) {
             reading_number = true;
@@ -205,6 +209,7 @@ function pqTree(output) {
             throw "Unknown char {}".format(char);
         }
     }
+    console.log(stack);
     return stack[0]["children"][0];
 }
 
@@ -214,6 +219,7 @@ function writeURL() {
 
 // read URL
 window.addEventListener('popstate', readURL);
+
 function readURL() {
     if (window.location.hash) {
         var params = window.location.hash.substr(1).split("&");
@@ -228,6 +234,7 @@ function readURL() {
 }
 
 var oldMessage = "";
+
 function update(e) {
     // update data from checkboxes
     data = [];
@@ -244,6 +251,7 @@ function update(e) {
         data.push(line);
     }
     n = data[0].length;
+    console.log(n, data);
 
     message = n + ";" + data.map(line => line.join("")).join(";");
     if (message == oldMessage) {
@@ -252,7 +260,7 @@ function update(e) {
     writeURL();
     output = process(message);
     oldMessage = message;
-    // document.getElementById("display").innerHTML = output;
+    document.getElementById("display").innerHTML = output;
     pqT = pqTree(output);
 
     drawPQTree(pqT);
@@ -291,12 +299,14 @@ function nodeMouseOut(e) {
 }
 
 function addSvgNode(base, n, v) {
-    node = { type: n };
+    node = {type: n};
     for (var p in v) {
         if (p == "text") {
             node.textContent = v[p];
         } else {
-            node[p.replace(/[A-Z]/g, function (m, p, o, s) { return "-" + m.toLowerCase(); })] = v[p];
+            node[p.replace(/[A-Z]/g, function (m, p, o, s) {
+                return "-" + m.toLowerCase();
+            })] = v[p];
         }
     }
     base.push(node);
@@ -325,6 +335,7 @@ function nodeToTikZ(node) {
     function scale(x) {
         return (x * 0.02);//.toPrecision(2);
     }
+
     if (node.type == "circle") {
         return "\\draw[pnode] (" + scale(node.cx) + "," + scale(-node.cy) + ") circle [radius=" + scale(node.r) + "];";
     } else if (node.type == "rect") {
@@ -407,7 +418,13 @@ function buildPQNode(nodeList, node, cx, cy, incomingLine = null) {
             stroke: 'black',
             dataLeaves: getLeaves(node)
         });
-        addSvgNode(nodeList, 'text', { x: cx, y: cy + 0.69 * sideLength * ratio, textAnchor: 'middle', dominantBaseline: 'middle', text: node.value });
+        addSvgNode(nodeList, 'text', {
+            x: cx,
+            y: cy + 0.69 * sideLength * ratio,
+            textAnchor: 'middle',
+            dominantBaseline: 'middle',
+            text: node.value
+        });
         yValuesWhileRendering.push(cy + sideLength * ratio);
     } else if (node.type == "pnode") {
         var myWidth = numLeaves(node) * leafWidth;
@@ -420,12 +437,25 @@ function buildPQNode(nodeList, node, cx, cy, incomingLine = null) {
             } else {
                 var childCY = cy + levelHeight;
             }
-            var line = addSvgNode(nodeList, 'line', { x1: cx, y1: cy, x2: childCX, y2: childCY, stroke: 'black' });
+            var line = addSvgNode(nodeList, 'line', {x1: cx, y1: cy, x2: childCX, y2: childCY, stroke: 'black'});
             buildPQNode(nodeList, child, childCX, childCY, line);
             left += childWidth;
         }
-        addSvgNode(nodeList, 'circle', { cx: cx, cy: cy, r: 15, fill: '#ececec', stroke: 'black', dataLeaves: getLeaves(node) });
-        addSvgNode(nodeList, 'text', { x: cx + 0.4, y: cy + 1, textAnchor: 'middle', dominantBaseline: 'middle', text: "P" });
+        addSvgNode(nodeList, 'circle', {
+            cx: cx,
+            cy: cy,
+            r: 15,
+            fill: '#ececec',
+            stroke: 'black',
+            dataLeaves: getLeaves(node)
+        });
+        addSvgNode(nodeList, 'text', {
+            x: cx + 0.4,
+            y: cy + 1,
+            textAnchor: 'middle',
+            dominantBaseline: 'middle',
+            text: "P"
+        });
     } else if (node.type == "qnode") {
         var myWidth = numLeaves(node) * leafWidth;
         var left = cx - myWidth / 2;
@@ -439,7 +469,7 @@ function buildPQNode(nodeList, node, cx, cy, incomingLine = null) {
             } else {
                 var childCY = cy + levelHeight;
             }
-            var line = addSvgNode(nodeList, 'line', { x1: childCX, y1: cy, x2: childCX, y2: childCY, stroke: 'black' });
+            var line = addSvgNode(nodeList, 'line', {x1: childCX, y1: cy, x2: childCX, y2: childCY, stroke: 'black'});
             buildPQNode(nodeList, child, childCX, childCY, line);
             left += childWidth;
         }
@@ -456,7 +486,13 @@ function buildPQNode(nodeList, node, cx, cy, incomingLine = null) {
             dataLeaves: getLeaves(node)
         });
         var center = childCXs[0] + myWidth / 2;
-        addSvgNode(nodeList, 'text', { x: center, y: cy + 1, textAnchor: 'middle', dominantBaseline: 'middle', text: "Q" });
+        addSvgNode(nodeList, 'text', {
+            x: center,
+            y: cy + 1,
+            textAnchor: 'middle',
+            dominantBaseline: 'middle',
+            text: "Q"
+        });
         if (incomingLine != null) {
             incomingLine.x2 = center;
         }
@@ -466,6 +502,7 @@ function buildPQNode(nodeList, node, cx, cy, incomingLine = null) {
 }
 
 var yValuesWhileRendering = [];
+
 function drawPQTree(tree) {
     var oldSvg = document.getElementById("treeSVG");
     var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -501,7 +538,7 @@ function drawPQTree(tree) {
     svg.setAttribute('viewBox', `0 0 ${overallWidth} ${computedHeight}`);
 
     var svgData = svg.outerHTML;
-    var svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+    var svgBlob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
     var svgUrl = URL.createObjectURL(svgBlob);
     downloadLink.innerHTML = "Download SVG";
     downloadLink.href = svgUrl;
@@ -509,6 +546,7 @@ function drawPQTree(tree) {
 }
 
 const factorial = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800];
+
 function numberOfEncodedOrderings(node) {
     if (node == null) {
         return 0;

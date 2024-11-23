@@ -6,7 +6,7 @@
     <title>PQ Trees online</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="pqtree.css"/>
-    <script src="pqtree.js"></script>
+    <script src="../wasm/pqtree.js"></script>
 </head>
 
 <body>
@@ -52,8 +52,7 @@
         </details>
 
         <p id="credits"><a href="https://github.com/DominikPeters/pqtree.js">Github</a> &middot; built by <a
-                href="https://dominik-peters.de">Dominik Peters</a>
-            &middot; updated Dec 2021</p>
+                href="https://dominik-peters.de">Dominik Peters</a> &middot; updated Dec 2021</p>
     </aside>
     <section id="input-wrapper">
         <div id="input-table-container">
@@ -62,11 +61,13 @@
         </div>
 
         <div id="svg-container">
-            <svg id="treeSVG" width="500" , height="200" xmlns="http://www.w3.org/2000/svg"
-            ></svg>
+            <svg id="treeSVG" width="500" height="200" xmlns="http://www.w3.org/2000/svg"></svg>
         </div>
+
+        <div id="display"></div>
     </section>
 </main>
+
 
 <script src="pqtree.js"></script>
 </body>

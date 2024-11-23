@@ -1,1 +1,0 @@
-emcc pqnode.cc pqtree.cc -s EXPORTED_FUNCTIONS='["_Process"]' -s EXPORTED_RUNTIME_METHODS='["cwrap"]' -O3 -s EXPORT_NAME="'PQTreeModule'" -s MODULARIZE -o pqtree.js
