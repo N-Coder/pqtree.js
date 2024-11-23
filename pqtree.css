@@ -1,0 +1,285 @@
+:root {
+    --form-control-color: rgb(55, 0, 143);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+main {
+    display: flex;
+    gap: 1em;
+}
+
+aside {
+    padding: 1em 2em;
+    /* background-color: #3423A6; */
+    top: 0;
+    height: 100vh;
+    box-sizing: border-box;
+    background-color: var(--form-control-color);
+    display: flex;
+    flex-direction: column;
+    color: white;
+    min-width: 26em;
+    gap: 1em;
+}
+
+aside a,
+aside a:hover {
+    color: white;
+}
+
+aside pre {
+    max-width: 26em;
+    max-height: 15.7em;
+    font-size: 80%;
+    overflow: auto;
+    user-select: all;
+}
+
+aside p {
+    font-size: 90%;
+}
+
+aside details {
+    margin-top: 0.5em;
+}
+
+aside button {
+    padding: 1em;
+    max-width: 25em;
+    border: 2px solid var(--form-control-color);
+    background-color: var(--form-control-color);
+    color: white;
+    border-radius: 10px;
+    box-shadow: inset 0 0 5px #ccc;
+    cursor: pointer;
+}
+
+aside button:active {
+    transform: scale(0.98);
+    background-color: rgb(98, 46, 182);
+}
+
+aside button:disabled {
+    background-color: rgb(87, 71, 112);
+    box-shadow: inset 0 0 5px #333;
+    color: #bbb;
+    cursor: not-allowed;
+}
+
+aside button#random-button {
+    background-color: rgb(132, 24, 179);
+}
+
+section#input-wrapper {
+    padding: 2em 2em 0 2.5em;
+    display: flex;
+    flex-direction: column;
+    order: 2;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+aside #credits {
+    margin-top: auto;
+}
+
+div#input-table-container {
+    min-height: 300px;
+    margin-bottom: 1em;
+}
+
+table#input-table td {
+    text-align: center;
+    font-size: 1.5em;
+}
+
+#svg-container {
+    border: 2px solid var(--form-control-color);
+    border-radius: 10px;
+    padding: 15px 5px;
+    box-shadow: 5px 5px 5px #ccc;
+    max-width: 100%;
+    height: auto;
+    position: relative;
+}
+
+#svg-container svg {
+    max-width: 100%;
+    height: auto;
+}
+
+svg > text {
+    pointer-events: none;
+    user-select: none;
+}
+
+svg > polygon:hover,
+svg > circle:hover,
+svg > rect:hover {
+    cursor: pointer;
+    fill: rgb(202, 184, 232);
+}
+
+input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: white;
+    margin: 0;
+
+    font: inherit;
+    color: currentColor;
+    width: 1.15em;
+    height: 1.15em;
+    border: 0.15em solid currentColor;
+    border-radius: 0.15em;
+    transform: translateY(-0.075em);
+
+    cursor: pointer;
+
+    display: grid;
+    place-content: center;
+}
+
+input[type="checkbox"]::before {
+    content: "";
+    width: 0.65em;
+    height: 0.65em;
+    /* clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); */
+    transform: scale(0);
+    /* transform-origin: bottom left;
+    transition: 120ms transform ease-in-out; */
+    box-shadow: inset 1em 1em var(--form-control-color);
+    /* Windows High Contrast Mode */
+    background-color: CanvasText;
+}
+
+input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+
+.input-checkbox.highlight {
+    border-color: rgb(154, 24, 9);
+    box-shadow: inset 0 0 3px rgb(209, 11, 11);
+}
+
+.input-checkbox.highlight::before {
+    box-shadow: inset 1em 1em rgb(209, 11, 11);
+}
+
+#add-row-cell {
+    position: relative;
+}
+
+#add-row-cell a {
+    position: absolute;
+    top: -0.1em;
+    left: 0.25em;
+}
+
+td a {
+    font-weight: bold;
+}
+
+tfoot a {
+    margin-top: -5px;
+    padding-top: -5px;
+}
+
+a:hover {
+    color: rgb(85, 39, 160);
+    cursor: pointer;
+}
+
+summary {
+    cursor: pointer;
+    user-select: none;
+}
+
+body.rotated #input-table-container {
+    transform: rotate(-90deg) translate(-100%, 0);
+    transform-origin: top left;
+}
+
+body.rotated #input-table-container thead td {
+    transform: rotate(90deg);
+}
+
+@media screen and (max-width: 1024px) {
+    aside {
+        min-width: 22em;
+        width: 22em;
+        gap: 0.5em;
+    }
+
+    section#input-wrapper {
+        padding: 1em;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    aside {
+        min-width: 17em;
+        width: 17em;
+        gap: 0.3em;
+    }
+
+    section#input-wrapper {
+        padding: 1em;
+    }
+}
+
+h1 svg {
+    height: 1em;
+    margin-bottom: -3px;
+}
+
+@media screen and (max-width: 600px) {
+    main {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    aside {
+        min-width: 100%;
+        gap: 0.5em;
+        padding: 1em;
+        padding-bottom: 0;
+        height: auto;
+        box-shadow: 0px 3px 3px #ccc;
+    }
+
+    aside h1 {
+        font-size: 120%;
+        margin: 0;
+    }
+
+    aside #credits {
+        margin-top: 0.2em;
+        font-size: 75%;
+    }
+
+    section#input-wrapper {
+        padding: 0 0.5em;
+    }
+
+    aside button {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    div#input-table-container {
+        min-height: 0;
+        margin-bottom: 1.5em;
+    }
+
+    #hint-paste,
+    #hint-export,
+    #copy-button {
+        display: none;
+    }
+}
