@@ -1,6 +1,6 @@
 *-build
 *-build-*
-src/pqtree.js
+wasm/*.js
 *.wasm
 
 # Created by https://www.toptal.com/developers/gitignore/api/jetbrains+all,c++,cmake
