@@ -2,6 +2,7 @@
 *-build-*
 wasm/*.js
 *.wasm
+libPCTree.js
 
 # Created by https://www.toptal.com/developers/gitignore/api/jetbrains+all,c++,cmake
 # Edit at https://www.toptal.com/developers/gitignore?templates=jetbrains+all,c++,cmake
