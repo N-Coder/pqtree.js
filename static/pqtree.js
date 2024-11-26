@@ -89,6 +89,7 @@ function update(e) {
     // document.getElementById("display").innerHTML = res + " " + Module.getLeafOrder();
 
     if (res) {
+        document.getElementById("svg-container").innerHTML = Module.drawSVG(false);
         var num = Module.getOrderCount();
         document.getElementById("numberOfEncodedOrderings").innerHTML = num;
         if (num < 250) {
@@ -97,6 +98,7 @@ function update(e) {
             document.getElementById("allOrderings").innerHTML = "Too many orderings to display";
         }
     } else {
+        document.getElementById("svg-container").innerHTML = "";
         document.getElementById("numberOfEncodedOrderings").innerHTML = "0";
         document.getElementById("allOrderings").innerHTML = "No valid order";
     }
