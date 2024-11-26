@@ -2,6 +2,8 @@
 #include <pctree/PCTree.h>
 #include <string>
 
+#include "layout.h"
+
 #include <emscripten/bind.h>
 
 using namespace std;
@@ -89,39 +91,6 @@ string getAllOrders() {
     return "";
 }
 
-const double leafWidth = 70;
-const double levelHeight = 80;
-
-int numLeaves(PCNode *node) {
-  if (node->isLeaf())
-    return 1;
-  int count = 0;
-  for (auto child : node->children()) {
-    count += numLeaves(child);
-  }
-  return count;
-}
-void drawPQNodeSVG(stringstream &ss, PCNode *node, double cx, double cy,
-                   double &line_x, double &max_y);
-
-string drawSVG(bool is_circular) {
-  if (!tree)
-    return "";
-  stringstream ss;
-  ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"500\" "
-        "height=\"300\">";
-
-  auto root = tree->getRootNode()->getChild1();
-  auto overallWidth = numLeaves(root) * leafWidth;
-  double computedHeight = 0;
-  double dummy = 0;
-  drawPQNodeSVG(ss, root, overallWidth / 2, 20, dummy, computedHeight);
-  computedHeight += 5;
-
-  ss << "</svg>";
-  return ss.str();
-}
-
 void addSvgNode(stringstream &ss, const string &tag,
                 initializer_list<tuple<string, string>> values) {
   string text;
@@ -140,117 +109,220 @@ void addSvgNode(stringstream &ss, const string &tag,
   }
 }
 
-void drawPQNodeSVG(stringstream &ss, PCNode *node, double cx, double cy,
-                   double &line_x, double &max_y) {
-  if (node->isLeaf()) {
-    double ratio = 0.866; // equilateral triangle
-    double sideLength = 40;
-    stringstream points;
-    points << cx << "," << cy << " ";
-    points << cx - sideLength / 2 << "," << cy + sideLength * ratio << " ";
-    points << cx + sideLength / 2 << "," << cy + sideLength * ratio;
-    addSvgNode(
-        ss, "polygon",
-        {
-            {"points", points.str()}, {"fill", "#ececec"}, {"stroke", "black"},
-            // {"dataLeaves", getLeaves(node)}
-        });
-    addSvgNode(ss, "text",
-               {{"x", to_string(cx)},
-                {"y", to_string(cy + 0.69 * sideLength * ratio)},
-                {"textAnchor", "middle"},
-                {"dominantBaseline", "middle"},
-                {"text", labels[node]}});
-    max_y = max(cy + sideLength * ratio, max_y);
-    return;
-  } // else if (node->getNodeType() == PCNodeType::CNode) {
+string drawSVG(bool is_circular) {
+  if (!tree)
+    return "";
 
-  auto myWidth = numLeaves(node) * leafWidth;
-  auto left = cx - myWidth / 2;
-  for (auto child : node->children()) {
-    auto childWidth = numLeaves(child) * leafWidth;
-    auto childCX = left + childWidth / 2;
-    double childCY;
-    if (child->isLeaf()) {
-      childCY = cy + 0.5 * levelHeight;
+if (is_circular) {
+  Layout positions(*tree);
+  computePositionsCircular(*tree, positions, 200);
+
+  stringstream ss;
+  ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << 410
+     << "\" height=\"" << 410 << "\">";
+
+  for (auto node : tree->allNodes()) {
+    auto [cx, cy] = positions[node];
+    cx+=205;
+    cy+=205;
+    if (node->isLeaf()) {
+      double ratio = 0.866; // equilateral triangle
+      double sideLength = 40;
+      stringstream points;
+      points << cx << "," << cy << " ";
+      points << cx - sideLength / 2 << "," << cy + sideLength * ratio << " ";
+      points << cx + sideLength / 2 << "," << cy + sideLength * ratio;
+      addSvgNode(ss, "polygon",
+                 {
+                     {"points", points.str()},
+                     {"fill", "#ececec"},
+                     {"stroke", "black"},
+                     // {"dataLeaves", getLeaves(node)}
+                 });
+      addSvgNode(ss, "text",
+                 {{"x", to_string(cx)},
+                  {"y", to_string(cy + 0.69 * sideLength * ratio)},
+                  {"text-anchor", "middle"},
+                  {"dominant-baseline", "middle"},
+                  {"text", labels[node]}});
+    } else if (node->getNodeType() == PCNodeType::PNode) {
+      for (auto child : node->children()) {
+        auto [childCX, childCY] = positions[child];
+        childCX+=205;
+        childCY+=205;
+        addSvgNode(ss, "line",
+                   {
+                       {"x1", to_string(cx)},
+                       {"y1", to_string(cy)},
+                       {"x2", to_string(childCX)},
+                       {"y2", to_string(childCY)},
+                       {"stroke", "black"},
+                   });
+      }
+      addSvgNode(ss, "circle",
+                 {
+                     {"cx", to_string(cx)},
+                     {"cy", to_string(cy)},
+                     {"r", "15"},
+                     {"fill", "#ececec"},
+                     {"stroke", "black"},
+                     // {"dataLeaves", getLeaves(node)},
+                 });
+      addSvgNode(ss, "text",
+                 {
+                     {"x", to_string(cx + 0.4)},
+                     {"y", to_string(cy + 1)},
+                     {"text-anchor", "middle"},
+                     {"dominant-baseline", "middle"},
+                     {"text", "P"},
+                 });
     } else {
-      childCY = cy + levelHeight;
+      for (auto child : node->children()) {
+        auto [childCX, childCY] = positions[child];
+        childCX+=205;
+        childCY+=205;
+        addSvgNode(ss, "line",
+                   {
+                       {"x1", to_string(cx)},
+                       {"y1", to_string(cy)},
+                       {"x2", to_string(childCX)},
+                       {"y2", to_string(childCY)},
+                       {"stroke", "black"},
+                   });
+      }
+      addSvgNode(ss, "circle",
+                 {
+                     {"cx", to_string(cx)},
+                     {"cy", to_string(cy)},
+                     {"r", "15"},
+                     {"fill", "#ececec"},
+                     {"stroke", "black"},
+                     // {"dataLeaves", getLeaves(node)},
+                 });
+      addSvgNode(ss, "circle",
+                 {
+                     {"cx", to_string(cx)},
+                     {"cy", to_string(cy)},
+                     {"r", "20"},
+                     {"fill", "#ececec"},
+                     {"stroke", "black"},
+                     // {"dataLeaves", getLeaves(node)},
+                 });
+      addSvgNode(ss, "text",
+                 {{"x", to_string(cx)},
+                  {"y", to_string(cy + 1)},
+                  {"text-anchor", "middle"},
+                  {"dominant-baseline", "middle"},
+                  {"text", "Q"}});
     }
-    drawPQNodeSVG(ss, child, childCX, childCY, childCX, max_y);
-    addSvgNode(ss, "line",
-               {
-                   {"x1", to_string(cx)},
-                   {"y1", to_string(cy)},
-                   {"x2", to_string(childCX)},
-                   {"y2", to_string(childCY)},
-                   {"stroke", "black"},
-               });
-    left += childWidth;
   }
-  addSvgNode(ss, "circle",
-             {
-                 {"cx", to_string(cx)},
-                 {"cy", to_string(cy)},
-                 {"r", "15"},
-                 {"fill", "#ececec"},
-                 {"stroke", "black"},
-                 // {"dataLeaves", getLeaves(node)},
-             });
-  addSvgNode(ss, "text",
-             {
-                 {"x", to_string(cx + 0.4)},
-                 {"y", to_string(cy + 1)},
-                 {"textAnchor", "middle"},
-                 {"dominantBaseline", "middle"},
-                 {"text", "P"},
-             });
-  // } else if (node->getNodeType() == PCNodeType::PNode) {
-  //   auto myWidth = numLeaves(node) * leafWidth;
-  //   auto left = cx - myWidth / 2;
-  //   vector<double> childCXs;
-  //   for (auto child : node->children()) {
-  //     auto childWidth = numLeaves(child) * leafWidth;
-  //     auto childCX = left + childWidth / 2;
-  //     childCXs.push_back(childCX);
-  //     double childCY;
-  //     if (child->isLeaf()) {
-  //       childCY = cy + 0.5 * levelHeight;
-  //     } else {
-  //       childCY = cy + levelHeight;
-  //     }
-  //     auto line = addSvgNode(ss, "line",
-  //                            {
-  //                                {"x1", to_string(cx)},
-  //                                {"y1", to_string(cy)},
-  //                                {"x2", to_string(childCX)},
-  //                                {"y2", to_string(childCY)},
-  //                                {"stroke", "black"},
-  //                            });
-  //     drawPQNodeSVG(ss, child, childCX, childCY, line);
-  //     left += childWidth;
-  //   }
-  //   auto myWidth = childCXs.back() - childCXs[0];
-  //   auto buffer = 0.2 * leafWidth;
-  //   auto myHeight = 0.3 * levelHeight;
-  //   addSvgNode(ss, "rect",
-  //              {
-  //                  {"x", childCXs[0] - buffer},
-  //                  {"y", cy - myHeight / 2},
-  //                  {"width", myWidth + 2 * buffer},
-  //                  {"height", myHeight},
-  //                  {"fill", "#ececec"},
-  //                  {"stroke", "black"},
-  //                  {"dataLeaves", getLeaves(node)},
-  //              });
-  //   auto center = childCXs[0] + myWidth / 2;
-  //   addSvgNode(ss, "text",
-  //              {{"x", center},
-  //               {"y", cy + 1},
-  //               {"textAnchor", "middle"},
-  //               {"dominantBaseline", "middle"},
-  //               {"text", "Q"}});
-  //   line_x = center;
-  // }
+
+  ss << "</svg>";
+  return ss.str();
+}
+
+  Layout positions(*tree);
+  auto [width, height] =
+      computePositionsLinear(*tree, positions, 80, 70, 0, -40);
+
+  stringstream ss;
+  ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << width
+     << "\" height=\"" << (height - 80) << "\">";
+
+  for (auto node : tree->allNodes()) {
+    if (node == tree->getRootNode())
+      continue;
+    auto [cx, cy] = positions[node];
+    if (node->isLeaf()) {
+      double ratio = 0.866; // equilateral triangle
+      double sideLength = 40;
+      stringstream points;
+      points << cx << "," << cy << " ";
+      points << cx - sideLength / 2 << "," << cy + sideLength * ratio << " ";
+      points << cx + sideLength / 2 << "," << cy + sideLength * ratio;
+      addSvgNode(ss, "polygon",
+                 {
+                     {"points", points.str()},
+                     {"fill", "#ececec"},
+                     {"stroke", "black"},
+                     // {"dataLeaves", getLeaves(node)}
+                 });
+      addSvgNode(ss, "text",
+                 {{"x", to_string(cx)},
+                  {"y", to_string(cy + 0.69 * sideLength * ratio)},
+                  {"text-anchor", "middle"},
+                  {"dominant-baseline", "middle"},
+                  {"text", labels[node]}});
+    } else if (node->getNodeType() == PCNodeType::PNode) {
+      for (auto child : node->children()) {
+        auto [childCX, childCY] = positions[child];
+        addSvgNode(ss, "line",
+                   {
+                       {"x1", to_string(cx)},
+                       {"y1", to_string(cy)},
+                       {"x2", to_string(childCX)},
+                       {"y2", to_string(childCY)},
+                       {"stroke", "black"},
+                   });
+      }
+      addSvgNode(ss, "circle",
+                 {
+                     {"cx", to_string(cx)},
+                     {"cy", to_string(cy)},
+                     {"r", "15"},
+                     {"fill", "#ececec"},
+                     {"stroke", "black"},
+                     // {"dataLeaves", getLeaves(node)},
+                 });
+      addSvgNode(ss, "text",
+                 {
+                     {"x", to_string(cx + 0.4)},
+                     {"y", to_string(cy + 1)},
+                     {"text-anchor", "middle"},
+                     {"dominant-baseline", "middle"},
+                     {"text", "P"},
+                 });
+    } else {
+      for (auto child : node->children()) {
+        auto [childCX, childCY] = positions[child];
+        addSvgNode(ss, "line",
+                   {
+                       {"x1", to_string(childCX)},
+                       {"y1", to_string(cy)},
+                       {"x2", to_string(childCX)},
+                       {"y2", to_string(childCY)},
+                       {"stroke", "black"},
+                   });
+      }
+      auto buffer = 0.2 * 70;   // leafWidth
+      auto myHeight = 0.3 * 80; // levelHeight
+      double first_child_x = get<0>(positions[node->getChild1()]);
+      double last_child_x = get<0>(positions[node->getChild2()]);
+      if (first_child_x > last_child_x) {
+        swap(first_child_x, last_child_x);
+      }
+      addSvgNode(
+          ss, "rect",
+          {
+              {"x", to_string(first_child_x - buffer)},
+              {"y", to_string(cy - myHeight / 2)},
+              {"width", to_string((last_child_x - first_child_x) + 2 * buffer)},
+              {"height", to_string(myHeight)},
+              {"fill", "#ececec"},
+              {"stroke", "black"},
+              // {"dataLeaves", getLeaves(node)},
+          });
+      addSvgNode(ss, "text",
+                 {{"x", to_string(cx)},
+                  {"y", to_string(cy + 1)},
+                  {"text-anchor", "middle"},
+                  {"dominant-baseline", "middle"},
+                  {"text", "Q"}});
+    }
+  }
+
+  ss << "</svg>";
+  return ss.str();
 }
 
 string drawTikz(bool is_circular) {

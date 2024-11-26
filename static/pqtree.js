@@ -85,11 +85,12 @@ function update(e) {
 
     writeURL();
 
-    const res = Module.setRestrictions(data.map(line => line.join("")).join("\n"), false);
+    const is_circular = true;
+    const res = Module.setRestrictions(data.map(line => line.join("")).join("\n"), is_circular);
     // document.getElementById("display").innerHTML = res + " " + Module.getLeafOrder();
 
     if (res) {
-        document.getElementById("svg-container").innerHTML = Module.drawSVG(false);
+        document.getElementById("svg-container").innerHTML = Module.drawSVG(is_circular);
         var num = Module.getOrderCount();
         document.getElementById("numberOfEncodedOrderings").innerHTML = num;
         if (num < 250) {
