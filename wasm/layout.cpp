@@ -35,25 +35,56 @@ Point computePositionsLinear(PCNode *node, double left, double top,
   return {width, height + levelHeight};
 }
 
-void computePositionsCircular(PCTree &tree, Layout &positions, double radius) {
+double computeCircularWeight(PCTree &tree, PCTreeNodeArray<double> &weights,
+                             double inner_weight, double leaf_weight,
+                             function<double(double, double)> fold) {
+  vector<PCNode *> nodes(tree.allNodes(), FilteringPCTreeDFS());
+  std::reverse(nodes.begin(), nodes.end()); // TODO still goes towards root, not away from leaves
+  double max_weight = 0;
+  for (auto node : nodes) {
+    if (node->isLeaf()) {
+      weights[node] = leaf_weight;
+    } else {
+      double w = inner_weight;
+      for (auto child : node->children()) {
+        w = fold(w, weights[child]);
+      }
+      weights[node] = w;
+      max_weight = max(max_weight, w);
+    }
+  }
+  return max_weight;
+}
+
+void computePositionsCircular(PCTree &tree, Layout &positions, double radius,
+                              PCTreeNodeArray<double> *weights, double off_x,
+                              double off_y) {
   PCTreeNodeArray<int> indices(tree);
   size_t last_col = tree.getNodeCount();
   vector<vector<double>> matrix_x(tree.getNodeCount(),
                                   vector<double>(last_col + 1));
   vector<vector<double>> matrix_y(tree.getNodeCount(),
                                   vector<double>(last_col + 1));
-  int cnt = tree.getLeafCount();
+
+  auto add_to_matrix = [&matrix_x, &matrix_y](size_t a, size_t b,
+                                              double weight) {
+    matrix_x[a][b] += weight;
+    matrix_x[b][a] += weight;
+    matrix_x[a][a] -= weight;
+    matrix_x[b][b] -= weight;
+
+    matrix_y[a][b] += weight;
+    matrix_y[b][a] += weight;
+    matrix_y[a][a] -= weight;
+    matrix_y[b][b] -= weight;
+  };
+
+  auto cnt = tree.getLeafCount();
   for (auto node : tree.innerNodes()) {
     indices[node] = cnt;
-    matrix_x[cnt][cnt] = node->getDegree() * -1.0;
-    matrix_y[cnt][cnt] = node->getDegree() * -1.0;
-    if (node != tree.getRootNode()) {
-      int parent_idx = indices[node->getParent()];
-      matrix_x[parent_idx][cnt] = 1;
-      matrix_x[cnt][parent_idx] = 1;
-      matrix_y[parent_idx][cnt] = 1;
-      matrix_y[cnt][parent_idx] = 1;
-    }
+    if (node != tree.getRootNode())
+      add_to_matrix(cnt, indices[node->getParent()],
+                    weights ? (*weights)[node] : 1);
     cnt++;
   }
   assert(cnt == tree.getNodeCount());
@@ -68,11 +99,14 @@ void computePositionsCircular(PCTree &tree, Layout &positions, double radius) {
     matrix_y[cnt][cnt] = 1;
     matrix_x[cnt][last_col] = sin(a) * radius; // get<0>(positions[leaf]);
     matrix_y[cnt][last_col] = cos(a) * radius; // get<1>(positions[leaf]);
+
     int parent_idx = indices[leaf->getParent()];
-    matrix_x[parent_idx][cnt] = 1;
-    matrix_x[cnt][parent_idx] = 1;
-    matrix_y[parent_idx][cnt] = 1;
-    matrix_y[cnt][parent_idx] = 1;
+    double weight = weights ? (*weights)[leaf] : 1;
+    matrix_x[parent_idx][cnt] += weight;
+    matrix_x[parent_idx][parent_idx] -= weight;
+    matrix_y[parent_idx][cnt] += weight;
+    matrix_y[parent_idx][parent_idx] -= weight;
+
     cnt++;
   }
   assert(cnt == tree.getLeafCount());
@@ -80,45 +114,28 @@ void computePositionsCircular(PCTree &tree, Layout &positions, double radius) {
   vector<double> result_x;
   vector<double> result_y;
 
-  for (int row = 0; row < tree.getNodeCount(); row++) {
-    for (int col = 0; col < tree.getNodeCount(); col++) {
-      cout << matrix_x[row][col] << " ";
+  auto dump_result = [&tree, last_col](vector<vector<double>> &matrix,
+                                       vector<double> &result) {
+    for (int row = 0; row < tree.getNodeCount(); row++) {
+      for (int col = 0; col < tree.getNodeCount(); col++) {
+        cout << matrix[row][col] << " ";
+      }
+      cout << "= " << matrix[row][last_col] << " -> " << result[row] << "\n";
     }
-    cout << "= " << matrix_x[row][last_col] << " -> " << result_x[row] << endl;
-  }
-  cout << endl;
+    cout << endl;
+  };
 
-  for (int row = 0; row < tree.getNodeCount(); row++) {
-    for (int col = 0; col < tree.getNodeCount(); col++) {
-      cout << matrix_y[row][col] << " ";
-    }
-    cout << "= " << matrix_y[row][last_col] << " -> " << result_y[row] << endl;
-  }
-  cout << endl;
-
+  dump_result(matrix_x, result_x);
+  dump_result(matrix_y, result_y);
   gaussianElimination(matrix_x, result_x);
   gaussianElimination(matrix_y, result_y);
-
-  for (int row = 0; row < tree.getNodeCount(); row++) {
-    for (int col = 0; col < tree.getNodeCount(); col++) {
-      cout << matrix_x[row][col] << " ";
-    }
-    cout << "= " << matrix_x[row][last_col] << " -> " << result_x[row] << endl;
-  }
-  cout << endl;
-
-  for (int row = 0; row < tree.getNodeCount(); row++) {
-    for (int col = 0; col < tree.getNodeCount(); col++) {
-      cout << matrix_y[row][col] << " ";
-    }
-    cout << "= " << matrix_y[row][last_col] << " -> " << result_y[row] << endl;
-  }
-  cout << endl;
+  dump_result(matrix_x, result_x);
+  dump_result(matrix_y, result_y);
 
   cout << tree << endl;
   for (auto node : tree.allNodes()) {
     size_t idx = indices[node];
-    positions[node] = {result_x[idx], result_y[idx]};
+    positions[node] = {result_x[idx] + off_x, result_y[idx] + off_y};
     cout << (node->isLeaf() ? "L" : "N") << " " << node->index() << "@" << idx
          << ": " << result_x[idx] << ", " << result_y[idx] << endl;
   }
