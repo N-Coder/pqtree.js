@@ -153,6 +153,7 @@ document.addEventListener('paste', (event) => {
 });
 
 function randomMatrix() {
+    const is_circular = document.getElementById("toggle-cyclic").checked;
     if (window.innerWidth <= 600) {
         n = randInt(5, 9);
         var rows = randInt(4, 6);
@@ -164,7 +165,8 @@ function randomMatrix() {
     for (let i = 0; i < rows; i++) {
         var left = randInt(0, n - 2);
         var right = randInt(left + 1, n - 1);
-        data.push(range(n).map((i) => left <= i && i <= right ? 1 : 0));
+        var toggle = !is_circular || randInt(1, 3) !== 1;
+        data.push(range(n).map((i) => ((left <= i && i <= right) === toggle) ? 1 : 0));
     }
     buildTable();
     update();
