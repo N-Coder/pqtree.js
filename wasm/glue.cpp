@@ -129,13 +129,12 @@ void drawSvgNodesCircular(PCTree &tree, stringstream &ss, Layout &positions,
     cy += off_y;
     if (node->isLeaf()) {
       addSvgNode(ss, "circle",
-                 {
-                     {"cx", cx},
-                     {"cy", cy},
-                     {"r", "15"},
-                     {"fill", "white"},
-                     {"stroke", "#666666"},
-                 });
+                 {{"cx", cx},
+                  {"cy", cy},
+                  {"r", "15"},
+                  {"fill", "white"},
+                  {"stroke", "#666666"},
+                  {"data-leaves", labels[node]}});
       addSvgNode(ss, "text",
                  {
                      {"x", cx},
@@ -152,13 +151,11 @@ void drawSvgNodesCircular(PCTree &tree, stringstream &ss, Layout &positions,
       childCX += off_x;
       childCY += off_y;
       addSvgNode(ss, "line",
-                 {
-                     {"x1", cx},
-                     {"y1", cy},
-                     {"x2", childCX},
-                     {"y2", childCY},
-                     {"stroke", "black"},
-                 });
+                 {{"x1", cx},
+                  {"y1", cy},
+                  {"x2", childCX},
+                  {"y2", childCY},
+                  {"stroke", "black"}});
     }
 
     if (node->getNodeType() == PCNodeType::PNode) {
@@ -182,14 +179,12 @@ void drawSvgNodesCircular(PCTree &tree, stringstream &ss, Layout &positions,
                      // {"dataLeaves", getLeaves(node)},
                  });
       addSvgNode(ss, "circle",
-                 {
-                     {"cx", cx},
-                     {"cy", cy},
-                     {"r", "15"},
-                     {"fill", "transparent"},
-                     {"stroke", "black"},
-                     {"pointer-events", "none"},
-                 });
+                 {{"cx", cx},
+                  {"cy", cy},
+                  {"r", "15"},
+                  {"fill", "transparent"},
+                  {"stroke", "black"},
+                  {"pointer-events", "none"}});
       addSvgNode(ss, "text",
                  {{"x", (cx - 1)},
                   {"y", cy},
@@ -201,7 +196,7 @@ void drawSvgNodesCircular(PCTree &tree, stringstream &ss, Layout &positions,
 }
 
 void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
-  for (auto node : tree.allNodes()) { // TODO improve node positioning
+  for (auto node : tree.allNodes()) {
     if (node->isLeaf() && node == tree.getRootNode())
       continue;
     auto [cx, cy] = positions[node];
@@ -217,7 +212,7 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
                  {{"points", points.str()},
                   {"fill", "white"},
                   {"stroke", "black"},
-                  {"dataLeaves", "[" + labels[node] + "]"}});
+                  {"data-leaves", labels[node]}});
       addSvgNode(ss, "text",
                  {{"x", cx},
                   {"y", (cy + 0.69 * sideLength * ratio)},
@@ -236,13 +231,11 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
       auto [childCX, childCY] = positions[child];
       addSvgNode(
           ss, "line",
-          {
-              {"x1", (node->getNodeType() == PCNodeType::PNode ? cx : childCX)},
-              {"y1", cy},
-              {"x2", childCX},
-              {"y2", childCY},
-              {"stroke", "black"},
-          });
+          {{"x1", (node->getNodeType() == PCNodeType::PNode ? cx : childCX)},
+           {"y1", cy},
+           {"x2", childCX},
+           {"y2", childCY},
+           {"stroke", "black"}});
     }
 
     if (node->getNodeType() == PCNodeType::PNode) {
@@ -256,13 +249,11 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
                      // {"dataLeaves", getLeaves(node)},
                  });
       addSvgNode(ss, "text",
-                 {
-                     {"x", (cx + 0.4)},
-                     {"y", cy},
-                     {"text-anchor", "middle"},
-                     {"dominant-baseline", "central"},
-                     {"text", "P"},
-                 });
+                 {{"x", (cx + 0.4)},
+                  {"y", cy},
+                  {"text-anchor", "middle"},
+                  {"dominant-baseline", "central"},
+                  {"text", "P"}});
     } else {
       // FIXME label not centered
       auto buffer = 0.4 * 70;   // leafWidth
@@ -309,6 +300,13 @@ string drawSVG(bool is_circular) {
 
     ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << 432
        << "\" height=\"" << 432 << "\">";
+    addSvgNode(ss, "circle",
+               {{"cx", 216},
+                {"cy", 216},
+                {"r", 200},
+                {"fill", "transparent"},
+                {"stroke", "#cccccc"},
+                {"pointer-events", "none"}});
     drawSvgNodesCircular(*tree, ss, positions);
   } else {
     auto [width, height] =
