@@ -91,7 +91,7 @@ void computePositionsCircular(PCTree &tree, Layout &positions, double radius,
 
   cnt = 0;
   double angle = (2 * M_PI) / tree.getLeafCount();
-  for (auto leaf : tree.getLeaves()) {
+  for (auto leaf : tree.currentLeafOrder()) {
     double a = angle * cnt;
     // positions[leaf] = {sin(a) * radius, cos(a) * radius};
     indices[leaf] = cnt;
