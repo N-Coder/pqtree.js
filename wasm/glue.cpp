@@ -206,6 +206,7 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
       continue;
     auto [cx, cy] = positions[node];
     if (node->isLeaf()) {
+      // cy -= 15;
       double ratio = 0.866; // equilateral triangle
       double sideLength = 40;
       stringstream points;
@@ -213,30 +214,38 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
       points << cx - sideLength / 2 << "," << cy + sideLength * ratio << " ";
       points << cx + sideLength / 2 << "," << cy + sideLength * ratio;
       addSvgNode(ss, "polygon",
-                 {
-                     {"points", points.str()},
-                     {"fill", "#ececec"},
-                     {"stroke", "black"},
-                     // {"dataLeaves", getLeaves(node)}
-                 });
+                 {{"points", points.str()},
+                  {"fill", "white"},
+                  {"stroke", "black"},
+                  {"dataLeaves", "[" + labels[node] + "]"}});
       addSvgNode(ss, "text",
                  {{"x", cx},
                   {"y", (cy + 0.69 * sideLength * ratio)},
                   {"text-anchor", "middle"},
                   {"dominant-baseline", "central"},
                   {"text", labels[node]}});
-    } else if (node->getNodeType() == PCNodeType::PNode) {
-      for (auto child : node->children()) {
-        auto [childCX, childCY] = positions[child];
-        addSvgNode(ss, "line",
-                   {
-                       {"x1", cx},
-                       {"y1", cy},
-                       {"x2", childCX},
-                       {"y2", childCY},
-                       {"stroke", "black"},
-                   });
-      }
+      continue;
+    }
+
+    if (node->getNodeType() == PCNodeType::PNode &&
+        node != tree.getRootNode()) {
+      cy += 15;
+    }
+
+    for (auto child : node->children()) {
+      auto [childCX, childCY] = positions[child];
+      addSvgNode(
+          ss, "line",
+          {
+              {"x1", (node->getNodeType() == PCNodeType::PNode ? cx : childCX)},
+              {"y1", cy},
+              {"x2", childCX},
+              {"y2", childCY},
+              {"stroke", "black"},
+          });
+    }
+
+    if (node->getNodeType() == PCNodeType::PNode) {
       addSvgNode(ss, "circle",
                  {
                      {"cx", cx},
@@ -249,23 +258,13 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
       addSvgNode(ss, "text",
                  {
                      {"x", (cx + 0.4)},
-                     {"y", (cy + 1)},
+                     {"y", cy},
                      {"text-anchor", "middle"},
                      {"dominant-baseline", "central"},
                      {"text", "P"},
                  });
     } else {
-      for (auto child : node->children()) {
-        auto [childCX, childCY] = positions[child];
-        addSvgNode(ss, "line",
-                   {
-                       {"x1", childCX},
-                       {"y1", cy},
-                       {"x2", childCX},
-                       {"y2", childCY},
-                       {"stroke", "black"},
-                   });
-      }
+      // FIXME label not centered
       auto buffer = 0.4 * 70;   // leafWidth
       auto myHeight = 0.3 * 80; // levelHeight
       double first_child_x = get<0>(positions[node->getChild1()]);
@@ -276,7 +275,7 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
       addSvgNode(ss, "rect",
                  {
                      {"x", (first_child_x - buffer)},
-                     {"y", (cy - myHeight / 2)},
+                     {"y", cy},
                      {"width", ((last_child_x - first_child_x) + 2 * buffer)},
                      {"height", myHeight},
                      {"fill", "#ececec"},
@@ -285,7 +284,7 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
                  });
       addSvgNode(ss, "text",
                  {{"x", cx},
-                  {"y", (cy + 1)},
+                  {"y", (cy + myHeight / 2)},
                   {"text-anchor", "middle"},
                   {"dominant-baseline", "central"},
                   {"text", "Q"}});
@@ -313,10 +312,10 @@ string drawSVG(bool is_circular) {
     drawSvgNodesCircular(*tree, ss, positions);
   } else {
     auto [width, height] =
-        computePositionsLinear(*tree, positions, 80, 70, 0, -40);
+        computePositionsLinear(*tree, positions, 80, 70, 0, -79);
 
     ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << width
-       << "\" height=\"" << (height - 80) << "\">";
+       << "\" height=\"" << (height - 119) << "\">";
     drawSvgNodesLinear(*tree, ss, positions);
   }
   ss << "</svg>";
