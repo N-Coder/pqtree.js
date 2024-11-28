@@ -51,9 +51,13 @@
             <pre id="tikzOut"></pre>
         </details>
 
-        <div>
-            <input type="checkbox" id="toggle-cyclic"/> <label for="toggle-cyclic">Cyclic Orders</label>
-        </div>
+        <details>
+            <summary><input type="checkbox" id="toggle-cyclic"/> <label for="toggle-cyclic">Cyclic Orders</label>
+            </summary>
+            <p>When also considering cyclic instead of only linear orders, we also allow 1's to wrap around as in
+                11000111. In the cyclic setting, the PQ-tree is often also called PC-tree, where C-nodes behave
+                equivalently to Q-nodes.</p>
+        </details>
 
         <p id="credits"><a href="https://github.com/DominikPeters/pqtree.js">Github</a> &middot; built by <a
                 href="https://dominik-peters.de">Dominik Peters</a> &middot; updated Dec 2021</p>

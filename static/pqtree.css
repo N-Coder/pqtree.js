@@ -33,7 +33,7 @@ aside a:hover {
 }
 
 aside pre {
-    max-width: 26em;
+    max-width: 24em;
     max-height: 15.7em;
     font-size: 80%;
     overflow: auto;
@@ -42,6 +42,7 @@ aside pre {
 
 aside p {
     font-size: 90%;
+    max-width: 24em;
 }
 
 aside details {
