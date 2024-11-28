@@ -89,9 +89,16 @@ function update(e) {
     const res = Module.setRestrictions(data.map(line => line.join("")).join("\n"), is_circular);
     // document.getElementById("display").innerHTML = res + " " + Module.getLeafOrder();
 
+    const svg_cont = document.getElementById("svg-container");
     if (res) {
-        // TODO add hover listener
-        document.getElementById("svg-container").innerHTML = Module.drawSVG(is_circular);
+        svg_cont.innerHTML = Module.drawSVG(is_circular);
+        for (let node of svg_cont.childNodes[0].childNodes) {
+            if (node.tagName === "rect" || node.tagName === "circle" || node.tagName === "polygon") {
+                node.addEventListener("mouseover", nodeMouseOver);
+                node.addEventListener("mouseout", nodeMouseOut);
+            }
+        }
+
         var num = Module.getOrderCount();
         document.getElementById("numberOfEncodedOrderings").innerHTML = num;
         if (num < 250) {
@@ -100,7 +107,7 @@ function update(e) {
             document.getElementById("allOrderings").innerHTML = "Too many orderings to display";
         }
     } else {
-        document.getElementById("svg-container").innerHTML = "";
+        svg_cont.innerHTML = "";
         document.getElementById("numberOfEncodedOrderings").innerHTML = "0";
         document.getElementById("allOrderings").innerHTML = "No valid order";
     }

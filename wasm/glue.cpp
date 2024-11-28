@@ -121,6 +121,21 @@ void addSvgNode(
   }
 }
 
+string getLeaves(PCNode *below) {
+  stringstream ss;
+  bool first = true;
+  for (PCNode *leaf : FilteringPCTreeDFS(*tree, below)) {
+    if (leaf->isLeaf()) {
+      if (first)
+        first = false;
+      else
+        ss << " ";
+      ss << labels[leaf];
+    }
+  }
+  return ss.str();
+}
+
 void drawSvgNodesCircular(PCTree &tree, stringstream &ss, Layout &positions,
                           double off_x = 0, double off_y = 0) {
   for (auto node : tree.allNodes()) {
@@ -229,6 +244,8 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
 
     for (auto child : node->children()) {
       auto [childCX, childCY] = positions[child];
+      if (child->getNodeType() == PCNodeType::PNode)
+        childCY += 15;
       addSvgNode(
           ss, "line",
           {{"x1", (node->getNodeType() == PCNodeType::PNode ? cx : childCX)},
@@ -246,7 +263,7 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
                      {"r", "15"},
                      {"fill", "#ececec"},
                      {"stroke", "black"},
-                     // {"dataLeaves", getLeaves(node)},
+                     {"data-leaves", getLeaves(node)},
                  });
       addSvgNode(ss, "text",
                  {{"x", (cx + 0.4)},
@@ -271,7 +288,7 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
                      {"height", myHeight},
                      {"fill", "#ececec"},
                      {"stroke", "black"},
-                     // {"dataLeaves", getLeaves(node)},
+                     {"data-leaves", getLeaves(node)},
                  });
       addSvgNode(ss, "text",
                  {{"x", cx},
@@ -332,6 +349,8 @@ string drawTikz(bool is_circular) {
   ss << "\\end{tikzpicture}";
   return ss.str();
 }
+
+// TODO add to-ipe code
 
 EMSCRIPTEN_BINDINGS(PCTreeModule) {
   emscripten::function("setRestrictions", &setRestrictions);
