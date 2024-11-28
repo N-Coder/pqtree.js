@@ -85,11 +85,12 @@ function update(e) {
 
     writeURL();
 
-    const is_circular = true;
+    const is_circular = document.getElementById("toggle-cyclic").checked;
     const res = Module.setRestrictions(data.map(line => line.join("")).join("\n"), is_circular);
     // document.getElementById("display").innerHTML = res + " " + Module.getLeafOrder();
 
     if (res) {
+        // TODO add hover listener
         document.getElementById("svg-container").innerHTML = Module.drawSVG(is_circular);
         var num = Module.getOrderCount();
         document.getElementById("numberOfEncodedOrderings").innerHTML = num;
@@ -106,6 +107,7 @@ function update(e) {
     document.getElementById("reorder-button").disabled = !res;
 }
 
+document.getElementById("toggle-cyclic").addEventListener("click", update);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
