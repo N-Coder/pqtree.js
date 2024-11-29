@@ -59,16 +59,12 @@ bool setRestrictions(string spec, bool is_circular) {
   return true;
 }
 
-string getLeafOrder() {
-  if (!tree) {
-    return "";
-  }
-  vector<PCNode *> L;
-  tree->currentLeafOrder(L);
-  stringstream ss;
+void printLeafOrder(stringstream &ss) {
+  if (!tree)
+    return;
   bool first = true;
-  for (auto l : L) {
-    if (!labels[l].empty()) {
+  for (PCNode *l : FilteringPCTreeDFS(*tree, tree->getRootNode())) {
+    if (l->isLeaf() && !labels[l].empty()) {
       if (first) {
         first = false;
       } else {
@@ -77,6 +73,11 @@ string getLeafOrder() {
       ss << labels[l];
     }
   }
+}
+
+string getLeafOrder() {
+  stringstream ss;
+  printLeafOrder(ss);
   return ss.str();
 }
 
@@ -88,10 +89,15 @@ uint32_t getOrderCount() {
 }
 
 string getAllOrders() {
-  if (tree)
-    return getLeafOrder() + "\n"; // TODO implement
-  else
+  if (!tree)
     return "";
+  stringstream ss;
+  tree->firstEmbedding();
+  do {
+    printLeafOrder(ss);
+    ss << endl;
+  } while (tree->nextEmbedding());
+  return ss.str();
 }
 
 void addSvgNode(
