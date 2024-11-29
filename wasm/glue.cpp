@@ -216,7 +216,8 @@ void drawSvgNodesCircular(PCTree &tree, stringstream &ss, Layout &positions,
   }
 }
 
-void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
+void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions,
+                        PCTreeNodeArray<double> *widths) {
   for (auto node : tree.allNodes()) {
     if (node->isLeaf() && node == tree.getRootNode())
       continue;
@@ -278,27 +279,36 @@ void drawSvgNodesLinear(PCTree &tree, stringstream &ss, Layout &positions) {
                   {"dominant-baseline", "central"},
                   {"text", "P"}});
     } else {
-      // FIXME label not centered
-      auto buffer = 0.4 * 70;   // leafWidth
-      auto myHeight = 0.3 * 80; // levelHeight
-      double first_child_x = get<0>(positions[node->getChild1()]);
-      double last_child_x = get<0>(positions[node->getChild2()]);
-      if (first_child_x > last_child_x) {
-        swap(first_child_x, last_child_x);
+      auto height = 0.3 * 80; // levelHeight
+      double left_x = 0, width = 0;
+      if (widths && (*widths)[node] > 0) {
+        auto buffer = 0.1 * 70; // leafWidth
+        width = (*widths)[node];
+        left_x = cx - width / 2 + buffer;
+        width -= 2 * buffer;
+      } else {
+        auto buffer = 0.4 * 70; // leafWidth
+        double first_child_x = get<0>(positions[node->getChild1()]);
+        double last_child_x = get<0>(positions[node->getChild2()]);
+        if (first_child_x > last_child_x) {
+          swap(first_child_x, last_child_x);
+        }
+        left_x = first_child_x - buffer;
+        width = (last_child_x - first_child_x) + 2 * buffer;
       }
       addSvgNode(ss, "rect",
                  {
-                     {"x", (first_child_x - buffer)},
+                     {"x", left_x},
                      {"y", cy},
-                     {"width", ((last_child_x - first_child_x) + 2 * buffer)},
-                     {"height", myHeight},
+                     {"width", width},
+                     {"height", height},
                      {"fill", "#ececec"},
                      {"stroke", "black"},
                      {"data-leaves", getLeaves(node)},
                  });
       addSvgNode(ss, "text",
                  {{"x", cx},
-                  {"y", (cy + myHeight / 2)},
+                  {"y", (cy + height / 2)},
                   {"text-anchor", "middle"},
                   {"dominant-baseline", "central"},
                   {"text", "Q"}});
@@ -332,12 +342,13 @@ string drawSVG(bool is_circular) {
                 {"pointer-events", "none"}});
     drawSvgNodesCircular(*tree, ss, positions);
   } else {
+    PCTreeNodeArray<double> widths(*tree);
     auto [width, height] =
-        computePositionsLinear(*tree, positions, 80, 70, 0, -79);
+        computePositionsLinear(*tree, positions, &widths, 80, 70, 0, -79);
 
     ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << width
        << "\" height=\"" << (height - 119) << "\">";
-    drawSvgNodesLinear(*tree, ss, positions);
+    drawSvgNodesLinear(*tree, ss, positions, &widths);
   }
   ss << "</svg>";
   return ss.str();

@@ -7,13 +7,14 @@ using namespace std;
 using namespace pc_tree;
 
 Point computePositionsLinear(PCNode *node, double left, double top,
-                             Layout &positions, double levelHeight,
-                             double leafWidth) {
+                             Layout &positions,
+                             PCTreeNodeArray<double> *subtree_widths,
+                             double levelHeight, double leafWidth) {
   if (node->isLeaf()) {
     if (node->isDetached()) { // root
-      auto [child_width, child_heigh] =
-          computePositionsLinear(node->getOnlyChild(), left, top + levelHeight,
-                                 positions, levelHeight, leafWidth);
+      auto [child_width, child_heigh] = computePositionsLinear(
+          node->getOnlyChild(), left, top + levelHeight, positions,
+          subtree_widths, levelHeight, leafWidth);
       positions[node] = {left + child_width / 2, top};
       return {child_width, child_heigh + levelHeight};
     } else { // ordinary leaf
@@ -24,14 +25,16 @@ Point computePositionsLinear(PCNode *node, double left, double top,
   double width = 0;
   double height = 0;
   for (auto child : node->children()) {
-    auto [child_width, child_heigh] =
-        computePositionsLinear(child, left + width, top + levelHeight,
-                               positions, levelHeight, leafWidth);
+    auto [child_width, child_heigh] = computePositionsLinear(
+        child, left + width, top + levelHeight, positions, subtree_widths,
+        levelHeight, leafWidth);
     width += child_width;
     height = max(height, child_heigh);
   }
   positions[node] = {left + width / 2, top};
-  cout << node->index() << " " << width << ' ' << height << endl;
+  if (subtree_widths)
+    (*subtree_widths)[node] = width;
+  // cout << node->index() << " " << width << ' ' << height << endl;
   return {width, height + levelHeight};
 }
 
@@ -39,7 +42,9 @@ double computeCircularWeight(PCTree &tree, PCTreeNodeArray<double> &weights,
                              double inner_weight, double leaf_weight,
                              function<double(double, double)> fold) {
   vector<PCNode *> nodes(tree.allNodes(), FilteringPCTreeDFS());
-  std::reverse(nodes.begin(), nodes.end()); // TODO still goes towards root, not away from leaves
+  std::reverse(
+      nodes.begin(),
+      nodes.end()); // TODO still goes towards root, not away from leaves
   double max_weight = 0;
   for (auto node : nodes) {
     if (node->isLeaf()) {
@@ -114,30 +119,31 @@ void computePositionsCircular(PCTree &tree, Layout &positions, double radius,
   vector<double> result_x;
   vector<double> result_y;
 
-  auto dump_result = [&tree, last_col](vector<vector<double>> &matrix,
-                                       vector<double> &result) {
-    for (int row = 0; row < tree.getNodeCount(); row++) {
-      for (int col = 0; col < tree.getNodeCount(); col++) {
-        cout << matrix[row][col] << " ";
-      }
-      cout << "= " << matrix[row][last_col] << " -> " << result[row] << "\n";
-    }
-    cout << endl;
-  };
+  // auto dump_result = [&tree, last_col](vector<vector<double>> &matrix,
+  //                                      vector<double> &result) {
+  //   for (int row = 0; row < tree.getNodeCount(); row++) {
+  //     for (int col = 0; col < tree.getNodeCount(); col++) {
+  //       cout << matrix[row][col] << " ";
+  //     }
+  //     cout << "= " << matrix[row][last_col] << " -> " << result[row] << "\n";
+  //   }
+  //   cout << endl;
+  // };
 
-  dump_result(matrix_x, result_x);
-  dump_result(matrix_y, result_y);
+  // dump_result(matrix_x, result_x);
+  // dump_result(matrix_y, result_y);
   gaussianElimination(matrix_x, result_x);
   gaussianElimination(matrix_y, result_y);
-  dump_result(matrix_x, result_x);
-  dump_result(matrix_y, result_y);
+  // dump_result(matrix_x, result_x);
+  // dump_result(matrix_y, result_y);
 
-  cout << tree << endl;
+  // cout << tree << endl;
   for (auto node : tree.allNodes()) {
     size_t idx = indices[node];
     positions[node] = {result_x[idx] + off_x, result_y[idx] + off_y};
-    cout << (node->isLeaf() ? "L" : "N") << " " << node->index() << "@" << idx
-         << ": " << result_x[idx] << ", " << result_y[idx] << endl;
+    // cout << (node->isLeaf() ? "L" : "N") << " " << node->index() << "@" <<
+    // idx
+    //      << ": " << result_x[idx] << ", " << result_y[idx] << endl;
   }
 }
 

@@ -8,17 +8,20 @@ using Layout = pc_tree::PCTreeNodeArray<Point>;
 
 /**
  * Computes all node positions in the subtree starting at node, placed
- * left-top aligned to the given coordinates. Returns the width of the subtree.
+ * left-top aligned to the given coordinates. Returns the size of the subtree.
  */
 Point computePositionsLinear(pc_tree::PCNode *node, double left, double top,
-                             Layout &positions, double levelHeight,
-                             double leafWidth);
+                             Layout &positions,
+                             pc_tree::PCTreeNodeArray<double> *subtree_widths,
+                             double levelHeight, double leafWidth);
 
-inline Point computePositionsLinear(pc_tree::PCTree &tree, Layout &positions,
-                                    double levelHeight, double leafWidth,
-                                    double left = 0, double top = 0) {
+inline Point
+computePositionsLinear(pc_tree::PCTree &tree, Layout &positions,
+                       pc_tree::PCTreeNodeArray<double> *subtree_widths,
+                       double levelHeight, double leafWidth, double left = 0,
+                       double top = 0) {
   return computePositionsLinear(tree.getRootNode(), left, top, positions,
-                                levelHeight, leafWidth);
+                                subtree_widths, levelHeight, leafWidth);
 }
 
 void gaussianElimination(std::vector<std::vector<double>> &augmentedMatrix,
