@@ -90,14 +90,27 @@ function update(e) {
     // document.getElementById("display").innerHTML = res + " " + Module.getLeafOrder();
 
     const svg_cont = document.getElementById("svg-container");
+    const tikz_cont = document.getElementById("tikz-container");
+
+    const svg_down = document.getElementById("svg-download");
+    const ipe_down = document.getElementById("ipe-download");
+
     if (res) {
         svg_cont.innerHTML = Module.drawSVG(is_circular);
+        tikz_cont.innerHTML = Module.drawTikz(is_circular);
         for (let node of svg_cont.childNodes[0].childNodes) {
             if (node.tagName === "rect" || node.tagName === "circle" || node.tagName === "polygon") {
                 node.addEventListener("mouseover", nodeMouseOver);
                 node.addEventListener("mouseout", nodeMouseOut);
             }
         }
+
+        svg_down.innerHTML = "Download SVG";
+        svg_down.href = URL.createObjectURL(new Blob([svg_cont.innerHTML], {type: "image/svg+xml;charset=utf-8"}));
+        svg_down.download = is_circular ? "PCtree.svg" : "PQtree.svg";
+        ipe_down.innerHTML = "Download IPE";
+        ipe_down.href = URL.createObjectURL(new Blob([Module.drawIPE(is_circular)], {type: "text/xml;charset=utf-8"}));
+        ipe_down.download = is_circular ? "PCtree.ipe" : "PQtree.ipe";
 
         var num = Module.getOrderCount();
         document.getElementById("numberOfEncodedOrderings").innerHTML = num;
@@ -107,7 +120,7 @@ function update(e) {
             document.getElementById("allOrderings").innerHTML = "Too many orderings to display";
         }
     } else {
-        svg_cont.innerHTML = "";
+        svg_cont.innerHTML = tikz_cont.innerHTML = svg_down.innerHTML = ipe_down.innerHTML = "";
         document.getElementById("numberOfEncodedOrderings").innerHTML = "0";
         document.getElementById("allOrderings").innerHTML = "No valid order";
     }

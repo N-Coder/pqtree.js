@@ -7,6 +7,7 @@
 
 #include <emscripten/bind.h>
 
+#include "drawing.h"
 #include "layout.h"
 
 using namespace std;
@@ -102,235 +103,70 @@ string getAllOrders() {
 	return ss.str();
 }
 
-void addSvgNode(stringstream& ss, const string& tag,
-		initializer_list<tuple<string, variant<string, double, int>>> values) {
-	string text;
-	ss << "<" << tag << " ";
-	for (auto [key, var] : values) {
-		if (key == "text") {
-			text = get<string>(var);
-			continue;
-		}
-		string value;
-		if (holds_alternative<int>(var)) {
-			value = to_string(get<int>(var));
-		} else if (holds_alternative<double>(var)) {
-			value = to_string(get<double>(var));
-		} else {
-			value = get<string>(var);
-		}
-		ss << key << "=\"" << value << "\" ";
-	}
-	if (!text.empty()) {
-		ss << ">" << text << "</" << tag << ">";
-	} else {
-		ss << "/>";
-	}
-}
-
-string getLeaves(PCNode* below) {
-	stringstream ss;
-	bool first = true;
-	for (PCNode* leaf : FilteringPCTreeDFS(*tree, below)) {
-		if (leaf->isLeaf()) {
-			if (first) {
-				first = false;
-			} else {
-				ss << " ";
-			}
-			ss << labels[leaf];
-		}
-	}
-	return ss.str();
-}
-
-void drawSvgNodesCircular(PCTree& tree, stringstream& ss, Layout& positions, double off_x = 0,
-		double off_y = 0) {
-	for (auto node : tree.allNodes()) {
-		auto [cx, cy] = positions[node];
-		cx += off_x;
-		cy += off_y;
-		if (node->isLeaf()) {
-			addSvgNode(ss, "circle",
-					{{"cx", cx}, {"cy", cy}, {"r", "15"}, {"fill", "white"}, {"stroke", "#666666"},
-							{"data-leaves", labels[node]}});
-			addSvgNode(ss, "text",
-					{
-							{"x", cx},
-							{"y", cy},
-							{"text-anchor", "middle"},
-							{"dominant-baseline", "central"},
-							{"text", labels[node]},
-					});
-			continue;
-		}
-
-		for (auto child : node->children()) {
-			auto [childCX, childCY] = positions[child];
-			childCX += off_x;
-			childCY += off_y;
-			addSvgNode(ss, "line",
-					{{"x1", cx}, {"y1", cy}, {"x2", childCX}, {"y2", childCY}, {"stroke", "black"}});
-		}
-
-		if (node->getNodeType() == PCNodeType::PNode) {
-			addSvgNode(ss, "circle",
-					{
-							{"cx", cx}, {"cy", cy}, {"r", "5"}, {"fill", "black"}, {"stroke", "black"},
-							// {"dataLeaves", getLeaves(node)},
-					});
-		} else {
-			addSvgNode(ss, "circle",
-					{
-							{"cx", cx}, {"cy", cy}, {"r", "20"}, {"fill", "#ececec"},
-							{"stroke", "black"},
-							// {"dataLeaves", getLeaves(node)},
-					});
-			addSvgNode(ss, "circle",
-					{{"cx", cx}, {"cy", cy}, {"r", "15"}, {"fill", "transparent"},
-							{"stroke", "black"}, {"pointer-events", "none"}});
-			addSvgNode(ss, "text",
-					{{"x", (cx - 1)}, {"y", cy}, {"text-anchor", "middle"},
-							{"dominant-baseline", "central"}, {"text", "C"}});
-		}
-	}
-}
-
-void drawSvgNodesLinear(PCTree& tree, stringstream& ss, Layout& positions,
-		PCTreeNodeArray<double>* widths) {
-	for (auto node : tree.allNodes()) {
-		if (node->isLeaf() && node == tree.getRootNode()) {
-			continue;
-		}
-		auto [cx, cy] = positions[node];
-		if (node->isLeaf()) {
-			// cy -= 15;
-			double ratio = 0.866; // equilateral triangle
-			double sideLength = 40;
-			stringstream points;
-			points << cx << "," << cy << " ";
-			points << cx - sideLength / 2 << "," << cy + sideLength * ratio << " ";
-			points << cx + sideLength / 2 << "," << cy + sideLength * ratio;
-			addSvgNode(ss, "polygon",
-					{{"points", points.str()}, {"fill", "white"}, {"stroke", "black"},
-							{"data-leaves", labels[node]}});
-			addSvgNode(ss, "text",
-					{{"x", cx}, {"y", (cy + 0.69 * sideLength * ratio)}, {"text-anchor", "middle"},
-							{"dominant-baseline", "central"}, {"text", labels[node]}});
-			continue;
-		}
-
-		if (node->getNodeType() == PCNodeType::PNode && node != tree.getRootNode()) {
-			cy += 15;
-		}
-
-		for (auto child : node->children()) {
-			auto [childCX, childCY] = positions[child];
-			if (child->getNodeType() == PCNodeType::PNode) {
-				childCY += 15;
-			}
-			addSvgNode(ss, "line",
-					{{"x1", (node->getNodeType() == PCNodeType::PNode ? cx : childCX)}, {"y1", cy},
-							{"x2", childCX}, {"y2", childCY}, {"stroke", "black"}});
-		}
-
-		if (node->getNodeType() == PCNodeType::PNode) {
-			addSvgNode(ss, "circle",
-					{
-							{"cx", cx},
-							{"cy", cy},
-							{"r", "15"},
-							{"fill", "#ececec"},
-							{"stroke", "black"},
-							{"data-leaves", getLeaves(node)},
-					});
-			addSvgNode(ss, "text",
-					{{"x", (cx + 0.4)}, {"y", cy}, {"text-anchor", "middle"},
-							{"dominant-baseline", "central"}, {"text", "P"}});
-		} else {
-			auto height = 0.3 * 80; // levelHeight
-			double left_x = 0, width = 0;
-			if (widths && (*widths)[node] > 0) {
-				auto buffer = 0.1 * 70; // leafWidth
-				width = (*widths)[node];
-				left_x = cx - width / 2 + buffer;
-				width -= 2 * buffer;
-			} else {
-				auto buffer = 0.4 * 70; // leafWidth
-				double first_child_x = get<0>(positions[node->getChild1()]);
-				double last_child_x = get<0>(positions[node->getChild2()]);
-				if (first_child_x > last_child_x) {
-					swap(first_child_x, last_child_x);
-				}
-				left_x = first_child_x - buffer;
-				width = (last_child_x - first_child_x) + 2 * buffer;
-			}
-			addSvgNode(ss, "rect",
-					{
-							{"x", left_x},
-							{"y", cy},
-							{"width", width},
-							{"height", height},
-							{"fill", "#ececec"},
-							{"stroke", "black"},
-							{"data-leaves", getLeaves(node)},
-					});
-			addSvgNode(ss, "text",
-					{{"x", cx}, {"y", (cy + height / 2)}, {"text-anchor", "middle"},
-							{"dominant-baseline", "central"}, {"text", "Q"}});
-		}
-	}
-}
-
-string drawSVG(bool is_circular) {
+string draw(Drawer* drawer) {
 	if (!tree) {
 		return "";
 	}
 
 	Layout positions(*tree);
 	stringstream ss;
-	if (is_circular) {
+	if (dynamic_cast<CircularDrawer*>(drawer)) {
 		PCTreeNodeArray<double> weights(*tree);
 		// TODO improve line length ratios by using better weights
 		// double max_weight = computeCircularWeightByHeight(*tree, weights);
 		// for (auto node : tree->allNodes()) {
 		//   weights[node] = max_weight - weights[node] + 1;
 		// }
-		computePositionsCircular(*tree, positions, 200, nullptr, 216, 216);
+		computePositionsCircular(*tree, positions, 200, nullptr);
 
-		ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << 432 << "\" height=\"" << 432
-		   << "\">";
-		addSvgNode(ss, "circle",
-				{{"cx", 216}, {"cy", 216}, {"r", 200}, {"fill", "transparent"},
-						{"stroke", "#cccccc"}, {"pointer-events", "none"}});
-		drawSvgNodesCircular(*tree, ss, positions);
+		CircularDrawer& cdrawer = *dynamic_cast<CircularDrawer*>(drawer);
+		cdrawer.labels = &labels;
+		cdrawer.radius = 200;
+		cdrawer.draw(*tree, positions, ss);
 	} else {
 		PCTreeNodeArray<double> widths(*tree);
 		auto [width, height] = computePositionsLinear(*tree, positions, &widths, 80, 70, 0, -79);
 
-		ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << width << "\" height=\""
-		   << (height - 119) << "\">";
-		drawSvgNodesLinear(*tree, ss, positions, &widths);
+		LinearDrawer& ldrawer = *dynamic_cast<LinearDrawer*>(drawer);
+		ldrawer.labels = &labels;
+		ldrawer.widths = &widths;
+		ldrawer.width = width ;
+		ldrawer.height = height - 119;
+		ldrawer.draw(*tree, positions, ss);
 	}
-	ss << "</svg>";
+
 	return ss.str();
+}
+
+string drawSVG(bool is_circular) {
+	unique_ptr<Drawer> ptr;
+	if (is_circular) {
+		ptr.reset(new SVGCircularDrawer());
+	} else {
+		ptr.reset(new SVGLinearDrawer());
+	}
+	return draw(ptr.get());
+}
+
+string drawIPE(bool is_circular) {
+	unique_ptr<Drawer> ptr;
+	if (is_circular) {
+		ptr.reset(new IPECircularDrawer());
+	} else {
+		ptr.reset(new IPELinearDrawer());
+	}
+	return draw(ptr.get());
 }
 
 string drawTikz(bool is_circular) {
-	if (!tree) {
-		return "";
+	unique_ptr<Drawer> ptr;
+	if (is_circular) {
+		ptr.reset(new TikzCircularDrawer());
+	} else {
+		ptr.reset(new TikzLinearDrawer());
 	}
-	stringstream ss;
-	ss << "\\begin{tikzpicture}[leaf/.style={fill=black!10},pnode/"
-		  ".style={leaf},qnode/.style={leaf}]\n";
-
-	// TODO implement
-
-	ss << "\\end{tikzpicture}";
-	return ss.str();
+	return draw(ptr.get());
 }
-
-// TODO add to-ipe code
 
 EMSCRIPTEN_BINDINGS(PCTreeModule) {
 	emscripten::function("setRestrictions", &setRestrictions);
@@ -338,5 +174,6 @@ EMSCRIPTEN_BINDINGS(PCTreeModule) {
 	emscripten::function("getOrderCount", &getOrderCount);
 	emscripten::function("getAllOrders", &getAllOrders);
 	emscripten::function("drawSVG", &drawSVG);
+	emscripten::function("drawIPE", &drawIPE);
 	emscripten::function("drawTikz", &drawTikz);
 }
