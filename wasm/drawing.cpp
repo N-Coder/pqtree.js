@@ -1,6 +1,6 @@
 #include "drawing.h"
 
-void LinearDrawer::draw(const PCTree& tree, const Layout& positions, std::stringstream& ss) {
+void LinearDrawer::draw(const PCTree& tree, const Layout& positions, std::ostream& ss) {
 	cur_tree = &tree;
 	writeHeader(ss);
 	for (auto node : tree.allNodes()) {
@@ -44,10 +44,10 @@ void LinearDrawer::draw(const PCTree& tree, const Layout& positions, std::string
 	cur_tree = nullptr;
 }
 
-std::tuple<std::string, double> LinearDrawer::getTrianglePath(double cx, double cy) {
+std::tuple<std::string, double> LinearDrawer::getTrianglePath(double cx, double cy,
+		double sideLength) {
 	// cy -= 15;
 	double ratio = 0.866; // equilateral triangle
-	double sideLength = 40;
 	std::stringstream points;
 	points << cx << "," << cy << " ";
 	points << cx - sideLength / 2 << "," << cy + sideLength * ratio << " ";
@@ -82,7 +82,7 @@ std::tuple<double, double, double, double> LinearDrawer::getQNodeSize(PCNode* no
 	return {left_x, cy, width, height};
 }
 
-void CircularDrawer::draw(const PCTree& tree, const Layout& positions, std::stringstream& ss) {
+void CircularDrawer::draw(const PCTree& tree, const Layout& positions, std::ostream& ss) {
 	cur_tree = &tree;
 	writeHeader(ss);
 	for (auto node : tree.allNodes()) {
@@ -113,7 +113,7 @@ void CircularDrawer::draw(const PCTree& tree, const Layout& positions, std::stri
 	cur_tree = nullptr;
 }
 
-std::stringstream& Drawer::writeXMLNode(std::stringstream& ss, const std::string& tag,
+std::ostream& Drawer::writeXMLNode(std::ostream& ss, const std::string& tag,
 		std::initializer_list<std::tuple<std::string, std::variant<std::string, double, int>>> values) {
 	std::string text;
 	ss << "<" << tag << " ";
@@ -138,4 +138,47 @@ std::stringstream& Drawer::writeXMLNode(std::stringstream& ss, const std::string
 		ss << "/>";
 	}
 	return ss;
+}
+
+void IPECircularDrawer::writeStyle(std::ostream& ss) {
+	ss << R"cppstring(
+<ipestyle>
+    <symbol name="mark/pnode(sfx)">
+        <path stroke="black" fill="black">
+            2.5 0 0 2.5 0 0 e
+        </path>
+    </symbol>
+    <symbol name="mark/cnode(sfx)">
+        <group>
+            <path stroke="black" fill="white">
+                16 0 0 16 0 0 e
+            </path>
+            <path stroke="black" fill="white">
+                12 0 0 12 0 0 e
+            </path>
+        </group>
+    </symbol>
+    <symbol name="mark/leaf(sfx)">
+        <path stroke="black" fill="white">
+            14 0 0 14 0 0 e
+        </path>
+    </symbol>
+</ipestyle>
+)cppstring";
+}
+
+void IPELinearDrawer::writeStyle(std::ostream& ss) {
+	offset_y -= height;
+	ss << R"cppstring(
+<ipestyle>
+    <symbol name="mark/leaf(sfx)">
+        <path stroke="black" fill="white">
+			0 0 m
+			16 -32 l
+			-16 -32 l
+			h
+        </path>
+    </symbol>
+</ipestyle>
+)cppstring";
 }
