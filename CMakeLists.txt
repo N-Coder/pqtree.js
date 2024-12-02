@@ -7,6 +7,12 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(PCTree REQUIRED)
 
-add_library(PCTreeJS wasm/glue.cpp wasm/layout.cpp wasm/drawing.cpp) #  pctree/src
+set(SOURCE_FILES wasm/layout.cpp wasm/drawing.cpp)
+
+add_library(PCTreeJS ${SOURCE_FILES} wasm/glue.cpp)
 target_include_directories(PCTreeJS PUBLIC ${PCTree_INCLUDE_DIRS})
 target_link_libraries(PCTreeJS PCTree)
+
+add_executable(test_drawing ${SOURCE_FILES} wasm/test_drawing.cpp)
+target_include_directories(test_drawing PUBLIC ${PCTree_INCLUDE_DIRS})
+target_link_libraries(test_drawing PCTree)
