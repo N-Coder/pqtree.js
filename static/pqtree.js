@@ -234,6 +234,9 @@ function copyMatrix() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function nodeMouseOver(e) {
+    if (!e.target.dataset.hasOwnProperty("leaves")) {
+        return;
+    }
     var leaves = e.target.dataset.leaves.split(" ");
     for (var checkbox of document.getElementsByClassName("input-checkbox")) {
         if (leaves.includes(checkbox.id.split("-")[2])) {
