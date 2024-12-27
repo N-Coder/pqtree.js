@@ -16,3 +16,7 @@ target_link_libraries(PCTreeJS PCTree)
 add_executable(test_drawing ${SOURCE_FILES} wasm/test_drawing.cpp)
 target_include_directories(test_drawing PUBLIC ${PCTree_INCLUDE_DIRS})
 target_link_libraries(test_drawing PCTree)
+
+add_executable(test_serialize ${SOURCE_FILES} wasm/test_serialize.cpp)
+target_include_directories(test_serialize PUBLIC ${PCTree_INCLUDE_DIRS})
+target_link_libraries(test_serialize PCTree)

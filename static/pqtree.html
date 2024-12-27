@@ -51,6 +51,15 @@
             <pre id="tikz-container"></pre>
         </details>
 
+        <details id="hint-serialize">
+            <summary>Serialized tree</summary>
+            <p style="display:flex; flex-direction:row">
+                <input type="text" id="input-serialize" style="margin-right: 10px; flex: 1">
+                <button onclick="deserialize()">Load</button>
+            </p>
+            <p id="serialize-error" style="color: red"></p>
+        </details>
+
         <details>
             <summary><input type="checkbox" id="toggle-cyclic"/> <label for="toggle-cyclic">Cyclic Orders</label>
             </summary>

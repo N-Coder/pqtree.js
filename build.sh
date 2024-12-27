@@ -6,6 +6,8 @@ set -e
 # git submodule update --init --recursive
 # source ../emsdk/emsdk_env.sh
 
+export CXXFLAGS="-fwasm-exceptions"
+
 mkdir -p pctree-build
 emmake cmake -S pctree -B pctree-build -DCMAKE_BUILD_TYPE=Debug
 emmake make -C pctree-build PCTree
@@ -16,4 +18,5 @@ emmake make -C pctree-build PCTree
 
 emcc wasm/glue.cpp wasm/layout.cpp wasm/drawing.cpp \
   pctree-build/libPCTree.a -I pctree/include \
-  -lembind -o static/libPCTree.js -Og -g
+  -lembind -o static/libPCTree.js -Og -g \
+  -fwasm-exceptions

@@ -16,6 +16,14 @@ vector<PCNode*> leaves;
 unique_ptr<PCTree> tree;
 PCTreeNodeArray<string> labels;
 
+bool compareNodes(PCNode* a, PCNode* b) { return labels[a] < labels[b]; }
+
+void printLabel(std::ostream& os, PCNode* n, int) {
+	if (!labels[n].empty()) {
+		os << labels[n];
+	}
+}
+
 bool setRestrictions(string spec, bool is_circular) {
 	istringstream f(spec);
 	string line;
@@ -57,6 +65,52 @@ bool setRestrictions(string spec, bool is_circular) {
 		}
 	}
 	return true;
+}
+
+string serializeTree(bool is_circular) {
+	if (!tree) {
+		return "";
+	} else if (is_circular) {
+		return tree->uniqueID(printLabel, compareNodes);
+	} else {
+		return tree->uniqueIDRooted(printLabel, compareNodes, false);
+	}
+}
+
+string treeSpecToMatrix(const string& spec, bool is_circular) {
+	unique_ptr<PCTree> tree;
+	try {
+		cout << spec << endl;
+		tree = make_unique<PCTree>(spec, true);
+	} catch (const invalid_argument& e) {
+		return string("!") + e.what();
+	}
+	if (!is_circular) {
+		tree->changeRoot(tree->newNode(PCNodeType::Leaf, tree->getRootNode()));
+	}
+	cout << tree << endl;
+	vector<vector<PCNode*>> restr;
+	tree->getRestrictions(restr, is_circular ? nullptr : tree->getRootNode());
+
+	vector<PCNode*> leaves(tree->getLeaves().begin(), tree->getLeaves().end());
+	if (!is_circular) {
+		leaves.erase(std::remove(leaves.begin(), leaves.end(), tree->getRootNode()), leaves.end());
+	}
+	sort(leaves.begin(), leaves.end(), [](PCNode* a, PCNode* b) { return a->index() < b->index(); });
+
+	stringstream ss;
+	PCTreeNodeSet<> cons(*tree);
+	for (const auto& row : restr) {
+		cons.clear();
+		for (auto leaf : row) {
+			cons.insert(leaf);
+		}
+		for (auto leaf : leaves) {
+			ss << (cons.isMember(leaf) ? "1" : "0");
+		}
+		ss << endl;
+	}
+	return ss.str();
 }
 
 void printLeafOrder(stringstream& ss) {
@@ -130,7 +184,7 @@ string draw(Drawer* drawer) {
 		LinearDrawer& ldrawer = *dynamic_cast<LinearDrawer*>(drawer);
 		ldrawer.labels = &labels;
 		ldrawer.widths = &widths;
-		ldrawer.width = width ;
+		ldrawer.width = width;
 		ldrawer.height = height - 119;
 		ldrawer.draw(*tree, positions, ss);
 	}
@@ -170,6 +224,8 @@ string drawTikz(bool is_circular) {
 
 EMSCRIPTEN_BINDINGS(PCTreeModule) {
 	emscripten::function("setRestrictions", &setRestrictions);
+	emscripten::function("serializeTree", &serializeTree);
+	emscripten::function("treeSpecToMatrix", &treeSpecToMatrix);
 	emscripten::function("getLeafOrder", &getLeafOrder);
 	emscripten::function("getOrderCount", &getOrderCount);
 	emscripten::function("getAllOrders", &getAllOrders);

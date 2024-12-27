@@ -95,6 +95,8 @@ function update(e) {
     const svg_down = document.getElementById("svg-download");
     const ipe_down = document.getElementById("ipe-download");
 
+    const in_serialize = document.getElementById("input-serialize");
+
     if (res) {
         svg_cont.innerHTML = Module.drawSVG(is_circular);
         tikz_cont.innerHTML = Module.drawTikz(is_circular);
@@ -112,6 +114,8 @@ function update(e) {
         ipe_down.href = URL.createObjectURL(new Blob([Module.drawIPE(is_circular)], {type: "text/xml;charset=utf-8"}));
         ipe_down.download = is_circular ? "PCtree.ipe" : "PQtree.ipe";
 
+        in_serialize.value = Module.serializeTree(is_circular);
+
         var num = Module.getOrderCount();
         document.getElementById("numberOfEncodedOrderings").innerHTML = num;
         if (num < 250) {
@@ -121,9 +125,11 @@ function update(e) {
         }
     } else {
         svg_cont.innerHTML = tikz_cont.innerHTML = svg_down.innerHTML = ipe_down.innerHTML = "";
+        in_serialize.value = "";
         document.getElementById("numberOfEncodedOrderings").innerHTML = "0";
         document.getElementById("allOrderings").innerHTML = "No valid order";
     }
+    document.getElementById("serialize-error").innerHTML = "";
     document.getElementById("reorder-button").disabled = !res;
 }
 
@@ -139,7 +145,7 @@ window.addEventListener('popstate', readURL);
 
 function readURL() {
     if (window.location.hash) {
-        var params = window.location.hash.substr(1).split("&");
+        var params = window.location.hash.substring(1).split("&");
         data = [];
         for (var i = 0; i < params.length; i++) {
             var row = params[i].split("").map(x => parseInt(x));
@@ -155,7 +161,7 @@ function readURL() {
 document.addEventListener('paste', (event) => {
     let paste = (event.clipboardData || window.clipboardData).getData('text');
     // throw away all leading/trailing space and all characters except 0, 1, and \n
-    paste = paste.replace(/^\s+|\s+$/g, '').replace(/[^01\n]/g, '');
+    paste = paste.replace(/^\s+|\s+$/g, '');
     if (paste.match(/^[01\n]+$/)) {
         var lines = paste.split('\n');
         // check that all lines have the same length
@@ -168,9 +174,26 @@ document.addEventListener('paste', (event) => {
         } else {
             console.error("Could not parse clipboard data with mismatching row lengths", lines);
         }
+        event.preventDefault();
     }
-    event.preventDefault();
 });
+
+function deserialize() {
+    const is_circular = document.getElementById("toggle-cyclic").checked;
+    const spec = document.getElementById("input-serialize").value;
+    const matrix = Module.treeSpecToMatrix(spec, is_circular);
+    if (matrix[0] === "!") {
+        document.getElementById("serialize-error").innerHTML = matrix.substring(1)
+    } else {
+        document.getElementById("serialize-error").innerHTML = "";
+        const lines = matrix.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            data[i] = lines[i].split("").map(x => parseInt(x));
+        }
+        buildTable();
+        update();
+    }
+}
 
 function randomMatrix() {
     const is_circular = document.getElementById("toggle-cyclic").checked;

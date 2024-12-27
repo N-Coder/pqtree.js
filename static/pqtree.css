@@ -60,6 +60,12 @@ aside button {
     cursor: pointer;
 }
 
+aside input[type="text"] {
+    padding: 1em;
+    border: 2px solid var(--form-control-color);
+    border-radius: 10px;
+}
+
 aside button:active {
     transform: scale(0.98);
     background-color: rgb(98, 46, 182);
