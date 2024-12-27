@@ -1,18 +1,23 @@
 # pqtree.js
-An [emscripten](https://emscripten.org/)/WebAssembly version of [Gregable's implementation](https://github.com/Gregable/pq-trees) of the Booth-Lueker algorithm for producing [PQ-trees](https://en.wikipedia.org/wiki/PQ_tree) for the consecutive ones problem. The paper "[Experimental Comparison of PC-Trees and PQ-Trees](https://arxiv.org/abs/2106.14805)" by Fink et al. performed an extensive computational study and found that implementation to be correct.
 
-## Graphical online version available at https://pref.tools/pqtree
+An [emscripten](https://emscripten.org/)/WebAssembly version of
+the [UFPC implementation](https://github.com/N-Coder/pc-tree/) of
+the [Hsu-McConnell algorithm](https://doi.org/10.1016/S0304-3975(02)00435-8) for
+producing [PQ-/PC-trees](https://en.wikipedia.org/wiki/PQ_tree) for the (circular) consecutive ones problem.
+See the paper "[Experimental Comparison of PC-Trees and PQ-Trees](https://arxiv.org/abs/2106.14805)" by Fink et al. for
+more details on this implementation.
 
-[<img src="https://user-images.githubusercontent.com/3543224/146847918-2d2130ee-c6c6-4097-b381-a52d96a3d9e7.png" width="600">](https://pref.tools/pqtree)
+## Graphical Online Version available at [pref.tools/pqtree](https://pref.tools/pqtree)
 
-The sources for the online version are in the main directory of the repository: pqtree.html/.js/.wasm.
+[![Screenshot of the Website](./screenshot.png)](https://pref.tools/pqtree)
 
-## Build from source
+The online version is also automatically built by [CI](../../actions).
+
+## Build from Source
 
 To build the emscripten version, assuming emscripten is installed so `emcc` is callable:
 
 ```shell
-cd src
 ./build.sh
 ```
 
@@ -21,24 +26,18 @@ Use it as follows in HTML:
 ```HTML
 <script src="pqtree.js"></script>
 <script>
-  var process;
-  PQTreeModule().then(function (Module) {
-    process = Module.cwrap('Process', 'string', ['string']);
-  });
-  
-  // later ..
-  
-  var message = "6;001010;011010;011101";
-  // 6 columns, semicolon, then a semicolon-separated list of rows of the 0/1 matrix
-  var output = process(message);
-  // output == "(0 [(3 5) 1 2 4])"
-  
-  message = "5;11000;00110;11110;10101";
-  output = process(message);
-  // output == "Impossible"
+    var Module = {
+        onRuntimeInitialized: function () {
+            const is_circular = false; // use linear orders and PQ-trees
+                                       // (instead of cyclic orders and PC-trees)
+            Module.setRestrictions("001010\n011010\n011101", is_circular); // returns true
+            Module.setRestrictions("11000\n00110\n11110\n10101", is_circular); // returns false
+        }
+    };
 </script>
 ```
 
-The `output` is either the string `Impossible` if the input matrix does not have the consecutive ones property,
-or otherwise the induced PQ-tree, with P-nodes specified in parentheses `( )` and Q-nodes in brackets `[ ]`.
-See `pqtree.html` for a utility methods to parse these strings into JSON, and a method to extract one or all orderings induced by the PQ-tree.
+Function `setRestrictions` returns `true` if an order exists and the corresponding tree has been stored in internal
+state,
+or `false` if no such order exists and the internal state has been cleared.
+See the further methods in [glue.cpp](./wasm/glue.cpp) for methods for querying the tree stored in internal state.
