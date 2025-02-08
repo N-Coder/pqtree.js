@@ -31,7 +31,7 @@ function buildTable() {
     table.appendChild(thead);
     table.appendChild(tbody);
     table.appendChild(tfoot);
-    document.getElementById('input-table-container').replaceChild(table, document.getElementById('input-table'));
+    document.getElementById('input-table-wrapper').replaceChild(table, document.getElementById('input-table'));
     table.id = 'input-table';
     // make header
     let row = thead.insertRow();
@@ -131,6 +131,12 @@ function update(e) {
     }
     document.getElementById("serialize-error").innerHTML = "";
     document.getElementById("reorder-button").disabled = !res;
+
+    if (tg.isVisible) {
+        setTimeout(function () {
+            tg.updatePositions();
+        }, 100);
+    }
 }
 
 document.getElementById("toggle-cyclic").addEventListener("click", update);

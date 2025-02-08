@@ -82,7 +82,7 @@ aside button#random-button {
     background-color: rgb(132, 24, 179);
 }
 
-section#input-wrapper {
+section {
     padding: 2em 2em 0 2.5em;
     display: flex;
     flex-direction: column;
@@ -91,13 +91,33 @@ section#input-wrapper {
     justify-content: flex-start;
 }
 
+#hello-message {
+    max-width: 400px;
+    padding: 0 1em;
+    margin-top: 50px;
+    border: 1px solid var(--form-control-color);
+    border-radius: 10px;
+}
+
+#start-tour {
+    text-decoration: underline;
+    color: #953b39;
+    cursor: pointer;
+}
+
 aside #credits {
     margin-top: auto;
 }
 
-div#input-table-container {
+div#input-table-spacer {
     min-height: 300px;
+    min-width: 400px;
     margin-bottom: 1em;
+    margin-right: 2em;
+}
+
+#input-table-wrapper {
+    display: inline-block;
 }
 
 table#input-table td {
@@ -209,6 +229,10 @@ a:hover {
 summary {
     cursor: pointer;
     user-select: none;
+}
+
+.tg-backdrop {
+    pointer-events: none;
 }
 
 body.rotated #input-table-container {
