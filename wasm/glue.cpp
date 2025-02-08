@@ -24,8 +24,9 @@ void printLabel(std::ostream& os, PCNode* n, int) {
 	}
 }
 
-bool setRestrictions(string spec, bool is_circular) {
+int setRestrictions(string spec, bool is_circular) {
 	istringstream f(spec);
+	int restr_nr = 0;
 	string line;
 	size_t degree = 0;
 	vector<PCNode*> cons;
@@ -60,11 +61,12 @@ bool setRestrictions(string spec, bool is_circular) {
 		}
 		// cout << ")" << endl;
 		if (!tree->makeConsecutive(cons)) {
-			tree.reset();
-			return false;
+			// tree.reset();
+			return restr_nr;
 		}
+		restr_nr++;
 	}
-	return true;
+	return -1;
 }
 
 string serializeTree(bool is_circular) {
