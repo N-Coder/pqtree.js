@@ -8,13 +8,16 @@ function setMatrix(matrix, circular = false) {
 }
 
 const tg = new tourguide.TourGuideClient({
-    debug: true,
+    propagateEvents: true,
+    debug: false,
+    completeOnFinish: false,
     steps: [{
         target: "#start-tour",
         title: "Hey there! 👋",
-        content: `This is a short guide to teach you what PQ- and PC-trees are and how to use this site.\n
-            If you already know your way around, feel free to close this.
-            You can always reopen the guide by clicking this button.`,
+        content: `This is a short guide to teach you what PQ- and PC-trees are and how to use this site.
+            If you already know your way around, feel free to close this.<br/><br/>
+            Note that you can always undo changes to the matrix or reopen this tutorial by pressing your
+            browser's back button.`,
     }, {
         target: "#input-table-wrapper",
         title: "Use-Case",
@@ -114,3 +117,6 @@ const tg = new tourguide.TourGuideClient({
         content: ``,
     }].toReversed()
 })
+
+tg.onAfterExit(writeURL)
+tg.onAfterStepChange(writeURL)

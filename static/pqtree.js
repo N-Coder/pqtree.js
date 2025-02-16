@@ -4,7 +4,7 @@ const range = (n) => [...Array(n).keys()];
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var n;
-var data;
+var data = [];
 
 var Module = {
     onRuntimeInitialized: function () {
@@ -141,24 +141,67 @@ document.getElementById("toggle-cyclic").addEventListener("click", update);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-function writeURL() {
-    window.history.pushState(data, "", window.location.origin + window.location.pathname + "#" + data.map(row => row.join("")).join("&"));
+function computeHash() {
+    let vars = {
+        "mat": data.map(row => row.join("")).join("|"),
+        "circ": document.getElementById("toggle-cyclic").checked * 1,
+    }
+    if (tg.isVisible) {
+        vars["tut"] = tg.activeStep;
+    }
+    return "#" + Object.entries(vars).map(t => t.join("=")).join("&");
 }
 
-window.addEventListener('popstate', readURL);
-
-function readURL() {
-    if (window.location.hash) {
-        var params = window.location.hash.substring(1).split("&");
-        data = [];
-        for (var i = 0; i < params.length; i++) {
-            var row = params[i].split("").map(x => parseInt(x));
-            data.push(row);
-        }
-        buildTable();
-        update();
+function writeURL() {
+    const hash = computeHash();
+    if (hash != window.location.hash) {
+        window.history.pushState(hash, "", window.location.origin + window.location.pathname + hash);
     }
 }
+
+function readURL() {
+    if (window.location.hash && window.location.hash != computeHash()) {
+        const hash = window.location.hash.substring(1);
+        const parts = hash.split('&');
+        let vars = {};
+        for (let i = 0; i < parts.length; i++) {
+            const pair = parts[i].split('=');
+            if (pair.length == 1 && parts.length == 1) {
+                vars["mat"] = pair[0];
+            } else {
+                vars[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+            }
+        }
+
+        if ("mat" in vars) {
+            const mat_rows = vars["mat"].split("|");
+            data = [];
+            for (let i = 0; i < mat_rows.length; i++) {
+                data.push(mat_rows[i].split("").map(x => parseInt(x)));
+            }
+        }
+
+        if ("circ" in vars) {
+            document.getElementById("toggle-cyclic").checked = vars["circ"] > 0
+        }
+
+        buildTable();
+        update();
+
+        if ("tut" in vars) {
+            if (!tg.isVisible) {
+                tg.activeStep = vars["tut"] * 1
+                tg.start()
+            } else {
+                tg.visitStep(vars["tut"] * 1)
+            }
+        } else {
+            tg.exit()
+        }
+    }
+}
+
+window.addEventListener('hashchange', readURL)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
