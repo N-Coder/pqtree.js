@@ -5,6 +5,7 @@ const range = (n) => [...Array(n).keys()];
 
 var n;
 var data = [];
+var titles = [];
 
 var Module = {
     onRuntimeInitialized: function () {
@@ -23,7 +24,13 @@ var Module = {
 };
 
 function buildTable() {
-    n = data[0].length;
+    const n = data[0].length;
+    if (!titles) {
+        titles = [];
+    }
+    while (titles.length < n) {
+        titles.push(titles.length + "");
+    }
     let table = document.createElement('table');
     let thead = document.createElement('thead');
     let tbody = document.createElement('tbody');
@@ -37,7 +44,7 @@ function buildTable() {
     let row = thead.insertRow();
     for (let i = 0; i < n; i++) {
         let cell = row.insertCell();
-        cell.innerHTML = i;
+        cell.innerHTML = titles[i];
     }
     let addCell = row.insertCell();
     addCell.innerHTML = '<a onclick="addColumn()">+</a>';
@@ -81,12 +88,18 @@ function update(e) {
         data.push(line);
     }
     n = data[0].length;
+    if (!titles) {
+        titles = [];
+    }
+    while (titles.length < n) {
+        titles.push(titles.length + "");
+    }
     // console.log(n, data);
 
     writeURL();
 
     const is_circular = document.getElementById("toggle-cyclic").checked;
-    const failed_restr = Module.setRestrictions(data.map(line => line.join("")).join("\n"), is_circular);
+    const failed_restr = Module.setRestrictions(data.map(line => line.join("")).join("\n"), is_circular, titles.join("|"));
     // document.getElementById("display").innerHTML = res + " " + Module.getLeafOrder();
 
     const svg_cont = document.getElementById("svg-container");
@@ -149,6 +162,17 @@ function computeHash() {
     if (tg.isVisible) {
         vars["tut"] = tg.activeStep;
     }
+    if (data && data.length > 0) {
+        const n = data[0].length;
+        let tit_ref = [];
+        for (let i = 0; i < n; i++) {
+            tit_ref.push(i + "");
+        }
+        const tit_act = titles.join("|");
+        if (tit_act != tit_ref.join("|")) {
+            vars["col"] = tit_act;
+        }
+    }
     return "#" + Object.entries(vars).map(t => t.join("=")).join("&");
 }
 
@@ -179,6 +203,11 @@ function readURL() {
             for (let i = 0; i < mat_rows.length; i++) {
                 data.push(mat_rows[i].split("").map(x => parseInt(x)));
             }
+        }
+        if ("col" in vars) {
+            titles = vars["col"].split("|");
+        } else {
+            titles = [];
         }
 
         if ("circ" in vars) {
@@ -251,6 +280,7 @@ function randomMatrix() {
         n = randInt(5, 12);
         var rows = randInt(3, 8);
     }
+    titles = [];
     data = [];
     for (let i = 0; i < rows; i++) {
         var left = randInt(0, n - 2);
@@ -278,19 +308,27 @@ function addRow() {
 }
 
 function reorderMatrix() {
-    var order = Module.getLeafOrder().split(" ");
+    const order = Module.getLeafOrder().split(" ");
     // console.log(order);
-    var new_data = [];
+    let new_data = [];
     for (let i = 0; i < data.length; i++) {
         new_data.push(range(n).map(j => data[i][order[j]]));
     }
     data = new_data;
+    if (data.length > 0) {
+        let new_title = [];
+        for (let i = 0; i < data[0].length; i++) {
+            new_title.push(titles[order[i]]);
+        }
+        console.log(order, titles, new_title)
+        titles = new_title;
+    }
     buildTable();
     update();
 }
 
 function copyMatrix() {
-    var text = "";
+    let text = "";
     for (let i = 0; i < data.length; i++) {
         text += data[i].join("") + "\n";
     }

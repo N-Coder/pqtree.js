@@ -24,7 +24,16 @@ void printLabel(std::ostream& os, PCNode* n, int) {
 	}
 }
 
-int setRestrictions(string spec, bool is_circular) {
+int setRestrictions(const string& spec, bool is_circular = false, const string& title_s = "") {
+	vector<string> titles;
+	{
+		stringstream ss(title_s);
+		string t;
+		while (getline(ss, t, '|')) {
+			titles.push_back(t);
+		}
+	}
+
 	istringstream f(spec);
 	int restr_nr = 0;
 	string line;
@@ -41,7 +50,11 @@ int setRestrictions(string spec, bool is_circular) {
 			tree = make_unique<PCTree>(degree + (is_circular ? 0 : 1), &leaves);
 			labels.init(*tree);
 			for (size_t i = 0; i < degree; i++) {
-				labels[leaves[i]] = to_string(i);
+				if (i < titles.size()) {
+					labels[leaves[i]] = titles[i];
+				} else {
+					labels[leaves[i]] = to_string(i);
+				}
 			}
 			if (!is_circular) {
 				tree->changeRoot(leaves.back());
@@ -115,26 +128,30 @@ string treeSpecToMatrix(const string& spec, bool is_circular) {
 	return ss.str();
 }
 
-void printLeafOrder(stringstream& ss) {
+void printLeafOrder(stringstream& ss, bool pos = false) {
 	if (!tree) {
 		return;
 	}
 	bool first = true;
-	for (PCNode* l : FilteringPCTreeDFS(*tree, tree->getRootNode())) {
+	for (PCNode* l : FilteringPCTreeWalk<true, true>(*tree, tree->getRootNode())) {
 		if (l->isLeaf() && !labels[l].empty()) {
 			if (first) {
 				first = false;
 			} else {
 				ss << " ";
 			}
-			ss << labels[l];
+			if (pos) {
+				ss << l->index() - 1;
+			} else {
+				ss << labels[l];
+			}
 		}
 	}
 }
 
 string getLeafOrder() {
 	stringstream ss;
-	printLeafOrder(ss);
+	printLeafOrder(ss, true);
 	return ss.str();
 }
 
