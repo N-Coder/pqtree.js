@@ -1,13 +1,22 @@
 const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const range = (n) => [...Array(n).keys()];
+const rowOf = (cell) => cell.closest("tr");
+
+const cellOf = (cell) => cell.closest("td");
+
+if (window.NodeList && !NodeList.prototype.filter) {
+    NodeList.prototype.filter = Array.prototype.filter;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var n;
-var data = [];
-var titles = [];
+let data = [];
+let titles = [];
 
-var Module = {
+let dragSrcCell = null;
+let dragType = null;
+
+Module = {
     onRuntimeInitialized: function () {
         if (window.location.hash) {
             readURL();
@@ -23,14 +32,26 @@ var Module = {
     }
 };
 
-function buildTable() {
-    const n = data[0].length;
+function ensureTitles() {
     if (!titles) {
         titles = [];
     }
-    while (titles.length < n) {
-        titles.push(titles.length + "");
+    if (!data || data.length < 1) {
+        return;
     }
+    while (titles.length < data[0].length) {
+        let x = titles.length;
+        let s = "";
+        while (!s || x > 0) {
+            s += String.fromCharCode("a".charCodeAt(0) + (x % 26));
+            x = Math.floor(x / 26);
+        }
+        titles.push(s);
+    }
+}
+
+function buildTable() {
+    ensureTitles();
     let table = document.createElement('table');
     let thead = document.createElement('thead');
     let tbody = document.createElement('tbody');
@@ -41,34 +62,241 @@ function buildTable() {
     document.getElementById('input-table-wrapper').replaceChild(table, document.getElementById('input-table'));
     table.id = 'input-table';
     // make header
-    let row = thead.insertRow();
-    for (let i = 0; i < n; i++) {
-        let cell = row.insertCell();
+    let hrow = thead.insertRow();
+    let cell = hrow.insertCell(); // title column
+    for (let i = 0; i < data[0].length; i++) {
+        let cell = hrow.insertCell();
+        cell.classList.add('col-title');
         cell.innerHTML = titles[i];
+        cell.addEventListener("dblclick", (e) => {
+            const res = prompt("Rename column " + i + " '" + titles[i] + "'", titles[i]).trim();
+            if (res.length > 0) {
+                cell.innerHTML = titles[i] = res;
+                update();
+            }
+        });
     }
-    let addCell = row.insertCell();
-    addCell.innerHTML = '<a onclick="addColumn()">+</a>';
+    let addColCell = hrow.insertCell();
+    addColCell.id = "add-col-cell";
+    addColCell.innerHTML = '<a onclick="addColumn()">+</a>';
     // make data rows
     for (let i = 0; i < data.length; i++) {
         let row = tbody.insertRow();
-        for (let j = 0; j < n; j++) {
+        cell = row.insertCell();
+        cell.innerHTML = i;
+        cell.classList.add('row-title');
+        for (let j = 0; j < data[0].length; j++) {
             cell = row.insertCell();
             let checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = data[i][j] === 1;
             checkbox.id = 'checkbox-' + i + '-' + j;
             checkbox.classList.add('input-checkbox');
+            checkbox.addEventListener("click", update);
             cell.appendChild(checkbox);
         }
     }
     // make foot row
-    row = tfoot.insertRow();
-    cell = row.insertCell();
-    cell.id = "add-row-cell";
-    cell.innerHTML = '<a onclick="addRow()">+</a>';
-    // add event listeners to all checkboxes
-    for (var checkbox of tbody.getElementsByTagName("input")) {
-        checkbox.addEventListener("click", update);
+    let frow = tfoot.insertRow();
+    let addRowCell = frow.insertCell();
+    addRowCell.id = "add-row-cell";
+    addRowCell.innerHTML = '<a onclick="addRow()">+</a>';
+
+
+    // drag'n'drop cell callbacks
+    function dragend(e) {
+        //console.log("dragend", dragSrcCell, dragType, e.target, cellOf(e.target) ? cellOf(e.target).cellIndex : "?", rowOf(e.target) ? rowOf(e.target).rowIndex : "?")
+        dragType = null;
+        table.querySelectorAll('td').forEach(el =>
+            el.classList.remove('dragged-col-source', 'dragged-col-target', 'dragged-col-target-before', 'dragged-col-target-after'));
+        table.querySelectorAll('tr').forEach(el =>
+            el.classList.remove('dragged-row-source', 'dragged-row-target', 'dragged-row-target-before', 'dragged-row-target-after'));
+        table.classList.remove('table-dragging', 'table-dragging-row', 'table-dragging-col');
+        addRowCell.classList.remove('del-btn-hover');
+        addColCell.classList.remove('del-btn-hover');
+    }
+
+    function dragleave(e) {
+        //console.log("dragleave", dragSrcCell, dragType, e.target, cellOf(e.target).cellIndex, rowOf(e.target).rowIndex)
+        table.querySelectorAll("tr td:nth-child(" + (cellOf(e.target).cellIndex + 1) + ")").forEach(n =>
+            n.classList.remove('dragged-col-target', 'dragged-col-target-before', 'dragged-col-target-after'));
+        rowOf(e.target).classList.remove('dragged-row-target', 'dragged-row-target-before', 'dragged-row-target-after');
+    }
+
+    function dragenter(e) {
+        //console.log("dragenter", dragSrcCell, dragType, e.target, cellOf(e.target).cellIndex, rowOf(e.target).rowIndex)
+        if (dragType == "col") {
+            const cellIndex = cellOf(e.target).cellIndex;
+            for (let el of table.querySelectorAll("tr td:nth-child(" + (cellIndex + 1) + ")")) {
+                el.classList.add('dragged-col-target');
+                if (dragSrcCell.cellIndex == cellIndex || cellIndex == 0) {
+                    el.classList.remove('dragged-col-target', 'dragged-col-target-before', 'dragged-col-target-after');
+                } else if (dragSrcCell.cellIndex < cellIndex) {
+                    el.classList.add('dragged-col-target-after');
+                } else {
+                    el.classList.add('dragged-col-target-before');
+                }
+            }
+        } else if (dragType == "row") {
+            let row = rowOf(e.target);
+            row.classList.add('dragged-row-target');
+            if (rowOf(dragSrcCell).rowIndex == row.rowIndex || row.rowIndex == 0) {
+                row.classList.remove('dragged-row-target', 'dragged-row-target-before', 'dragged-row-target-after');
+            } else if (rowOf(dragSrcCell).rowIndex < row.rowIndex) {
+                row.classList.add('dragged-row-target-after');
+            } else {
+                row.classList.add('dragged-row-target-before');
+            }
+        } else return;
+        e.preventDefault();
+    }
+
+    function drop(e) {
+        //console.log("drop", dragSrcCell, dragType, e.target, cellOf(e.target).cellIndex, rowOf(e.target).rowIndex)
+        if (dragType == "col") {
+            const cellIndex = cellOf(e.target).cellIndex;
+            if (dragSrcCell.cellIndex != cellIndex && cellIndex != 0) {
+                const srci = dragSrcCell.cellIndex + 1;
+                const tgti = cellIndex + 1;
+                for (let row of table.querySelectorAll("thead tr, tbody tr")) {
+                    const src = row.querySelector(":nth-child(" + srci + ")");
+                    const tgt = row.querySelector(":nth-child(" + tgti + ")");
+                    // console.log(row, src, tgt, dragSrcCell.cellIndex, cellIndex)
+                    if (srci < tgti) {
+                        tgt.insertAdjacentElement('afterend', src);
+                    } else {
+                        tgt.insertAdjacentElement('beforebegin', src);
+                    }
+                }
+            }
+            table.querySelectorAll('.dragged-col-target').forEach(el =>
+                el.classList.remove('dragged-col-target', 'dragged-col-target-before', 'dragged-col-target-after'));
+        } else if (dragType == "row") {
+            const tgtRow = rowOf(e.target);
+            const srcRow = rowOf(dragSrcCell);
+            const srcRowIdx = srcRow.rowIndex;
+            if (srcRowIdx != tgtRow.rowIndex && tgtRow.rowIndex != 0) {
+                if (srcRowIdx < tgtRow.rowIndex) {
+                    tgtRow.insertAdjacentElement('afterend', srcRow);
+                } else {
+                    tgtRow.insertAdjacentElement('beforebegin', srcRow);
+                }
+            }
+            table.querySelectorAll('.dragged-row-target').forEach(el =>
+                el.classList.remove('dragged-row-target', 'dragged-row-target-before', 'dragged-row-target-after'));
+        } else return;
+        table.classList.remove('table-dragging', 'table-dragging-row', 'table-dragging-col');
+        e.preventDefault();
+        update();
+    }
+
+    for (let cell of table.querySelectorAll("td.col-title, td.row-title, td:has(input.input-checkbox)")) {
+        cell.addEventListener('dragend', dragend);
+        cell.addEventListener('dragleave', dragleave);
+        cell.addEventListener('dragover', dragenter);
+        cell.addEventListener('dragenter', dragenter);
+        cell.addEventListener('drop', drop);
+    }
+
+    addRowCell.addEventListener('dragleave', (e) => {
+        //console.log("dragleaveR", dragSrcCell, dragType, e.target, cellOf(e.target).cellIndex, rowOf(e.target).rowIndex)
+        addRowCell.classList.remove('del-btn-hover')
+    });
+    addRowCell.addEventListener('dragover', (e) => {
+        //console.log("dragoverR", dragSrcCell, dragType, e.target, cellOf(e.target).cellIndex, rowOf(e.target).rowIndex)
+        if (dragType == "row" && data.length > 1) {
+            addRowCell.classList.add('del-btn-hover')
+            e.preventDefault();
+        }
+    });
+    addRowCell.addEventListener('dragenter', (e) => {
+        //console.log("dragenterR", dragSrcCell, dragType, e.target, cellOf(e.target).cellIndex, rowOf(e.target).rowIndex)
+        if (dragType == "row" && data.length > 1) {
+            addRowCell.classList.add('del-btn-hover')
+            e.preventDefault();
+        }
+    });
+    addRowCell.addEventListener('drop', (e) => {
+        //console.log("dropR", dragSrcCell, dragType, e.target, cellOf(e.target).cellIndex, rowOf(e.target).rowIndex)
+        if (dragType == "row" && data.length > 1) {
+            rowOf(dragSrcCell).remove();
+            e.preventDefault();
+            update();
+        }
+        addRowCell.classList.remove('del-btn-hover')
+    });
+
+    addColCell.addEventListener('dragleave', (e) => {
+        //console.log("dragleaveC", dragSrcCell, dragType, e.target, cellOf(e.target).cellIndex, rowOf(e.target).rowIndex)
+        addColCell.classList.remove('del-btn-hover')
+    });
+    addColCell.addEventListener('dragover', (e) => {
+        //console.log("dragoverC", dragSrcCell, dragType, e.target, cellOf(e.target).cellIndex, rowOf(e.target).rowIndex)
+        if (dragType == "col" && data[0].length > 2) {
+            addColCell.classList.add('del-btn-hover')
+            e.preventDefault();
+        }
+    });
+    addColCell.addEventListener('dragenter', (e) => {
+        //console.log("dragenterC", dragSrcCell, dragType, e.target, cellOf(e.target).cellIndex, rowOf(e.target).rowIndex)
+        if (dragType == "col" && data[0].length > 2) {
+            addColCell.classList.add('del-btn-hover')
+            e.preventDefault();
+        }
+    });
+    addColCell.addEventListener('drop', (e) => {
+        //console.log("dropC", dragSrcCell, dragType, e.target, cellOf(e.target).cellIndex, rowOf(e.target).rowIndex)
+        if (dragType == "col" && data[0].length > 2) {
+            table.querySelectorAll("tr td:nth-child(" + (cellOf(dragSrcCell).cellIndex + 1) + ")").forEach(n => n.remove());
+            e.preventDefault();
+            update();
+        }
+        addColCell.classList.remove('del-btn-hover')
+    });
+
+    // enable col drag-rearrangement
+    for (let col of thead.querySelectorAll("td.col-title")) {
+        col.draggable = true;
+        col.addEventListener('dragstart', e => {
+            dragType = "col";
+            dragSrcCell = col;
+            table.classList.add('table-dragging', 'table-dragging-col');
+            e.dataTransfer.effectAllowed = 'move';
+
+            const dragGhost = table.cloneNode(true);
+            dragGhost.querySelectorAll("tr td:nth-child(-n+" + col.cellIndex + ")").forEach(n => n.remove());
+            dragGhost.querySelectorAll("tr td:nth-child(n+2)").forEach(n => n.remove());
+            e.dataTransfer.setData('text/html', dragGhost.outerHTML);
+            const dragGhostWrapper = document.querySelector("#drag-ghost");
+            dragGhostWrapper.innerHTML = "";
+            dragGhostWrapper.appendChild(dragGhost);
+            e.dataTransfer.setDragImage(dragGhost, 0, 0);
+
+            table.querySelectorAll("tr td:nth-child(" + (col.cellIndex + 1) + ")").forEach(
+                n => n.classList.add('dragged-col-source'));
+        });
+    }
+
+    // enable row drag-rearrangement
+    for (let row of tbody.querySelectorAll("tr td.row-title")) {
+        row.draggable = true;
+        row.addEventListener('dragstart', e => {
+            dragType = "row";
+            dragSrcCell = row;
+            table.classList.add('table-dragging', 'table-dragging-row');
+            e.dataTransfer.effectAllowed = 'move';
+
+            const dragGhost = table.cloneNode(true);
+            dragGhost.querySelectorAll("tr:nth-child(-n+" + (rowOf(row).rowIndex - 1) + ")").forEach(n => n.remove());
+            dragGhost.querySelectorAll("tr:nth-child(n+2), thead tr, tfoot tr").forEach(n => n.remove());
+            e.dataTransfer.setData('text/html', dragGhost.outerHTML);
+            const dragGhostWrapper = document.querySelector("#drag-ghost");
+            dragGhostWrapper.innerHTML = "";
+            dragGhostWrapper.appendChild(dragGhost);
+            e.dataTransfer.setDragImage(dragGhost, 0, 0);
+
+            rowOf(row).classList.add('dragged-row-source');
+        });
     }
 }
 
@@ -80,21 +308,15 @@ function update(e) {
     for (let i = 0; i < tbody.rows.length; i++) {
         let row = tbody.rows[i];
         let line = [];
-        for (let j = 0; j < row.cells.length; j++) {
+        for (let j = 1; j < row.cells.length; j++) { // skip title col
             let cell = row.cells[j];
             let checkbox = cell.getElementsByTagName('input')[0];
-            line.push((checkbox.checked ? 1 : 0));
+            line.push(checkbox.checked ? 1 : 0);
         }
         data.push(line);
     }
-    n = data[0].length;
-    if (!titles) {
-        titles = [];
-    }
-    while (titles.length < n) {
-        titles.push(titles.length + "");
-    }
-    // console.log(n, data);
+    titles = Array.from(table.querySelectorAll("thead td.col-title").values().map(n => n.innerHTML));
+    ensureTitles();
 
     writeURL();
 
@@ -273,19 +495,20 @@ function deserialize() {
 
 function randomMatrix() {
     const is_circular = document.getElementById("toggle-cyclic").checked;
+    let n, rows;
     if (window.innerWidth <= 600) {
         n = randInt(5, 9);
-        var rows = randInt(4, 6);
+        rows = randInt(4, 6);
     } else {
         n = randInt(5, 12);
-        var rows = randInt(3, 8);
+        rows = randInt(3, 8);
     }
     titles = [];
     data = [];
     for (let i = 0; i < rows; i++) {
-        var left = randInt(0, n - 2);
-        var right = randInt(left + 1, n - 1);
-        var toggle = !is_circular || randInt(1, 3) !== 1;
+        let left = randInt(0, n - 2);
+        let right = randInt(left + 1, n - 1);
+        let toggle = !is_circular || randInt(1, 3) !== 1;
         data.push(range(n).map((i) => ((left <= i && i <= right) === toggle) ? 1 : 0));
     }
     buildTable();
@@ -293,7 +516,6 @@ function randomMatrix() {
 }
 
 function addColumn() {
-    n += 1;
     for (let i = 0; i < data.length; i++) {
         data[i].push(0);
     }
@@ -302,7 +524,7 @@ function addColumn() {
 }
 
 function addRow() {
-    data.push(Array(n).fill(0));
+    data.push(Array(data[0].length).fill(0));
     buildTable();
     update();
 }
@@ -312,7 +534,7 @@ function reorderMatrix() {
     // console.log(order);
     let new_data = [];
     for (let i = 0; i < data.length; i++) {
-        new_data.push(range(n).map(j => data[i][order[j]]));
+        new_data.push(range(data[0].length).map(j => data[i][order[j]]));
     }
     data = new_data;
     if (data.length > 0) {
@@ -345,16 +567,21 @@ function nodeMouseOver(e) {
     if (!e.target.dataset.hasOwnProperty("leaves")) {
         return;
     }
-    var leaves = e.target.dataset.leaves.split(" ");
-    for (var checkbox of document.getElementsByClassName("input-checkbox")) {
-        if (leaves.includes(checkbox.id.split("-")[2])) {
+    const selected = e.target.dataset.leaves.split(" ");
+    const idcs = document.querySelectorAll("#input-table thead td.col-title")
+        .filter((e) => selected.includes(e.innerHTML.trim()))
+        .map((e) => e.cellIndex)
+    console.log(selected, idcs)
+    const tbody = document.querySelector("#input-table tbody")
+    for (let idx of idcs) {
+        for (let checkbox of tbody.querySelectorAll("tr td:nth-child(" + (idx + 1) + ") input.input-checkbox")) {
             checkbox.classList.add("highlight");
         }
     }
 }
 
 function nodeMouseOut(e) {
-    for (var checkbox of document.getElementsByClassName("input-checkbox")) {
+    for (let checkbox of document.querySelectorAll("input.input-checkbox.highlight")) {
         checkbox.classList.remove("highlight");
     }
 }

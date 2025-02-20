@@ -121,31 +121,51 @@ div#input-table-spacer {
     display: inline-block;
 }
 
-table#input-table td {
+#input-table {
+    border-collapse: collapse;
+}
+
+#input-table th, #input-table thead td {
+    font-weight: bold;
+}
+
+#input-table td {
     text-align: center;
     font-size: 1.5em;
 }
 
-#svg-container {
-    border: 2px solid var(--form-control-color);
-    border-radius: 10px;
-    padding: 15px 5px;
-    box-shadow: 5px 5px 5px #ccc;
-    max-width: 100%;
-    height: auto;
-    position: relative;
+table td.row-title {
+    color: #999;
 }
 
-svg > text {
-    pointer-events: none;
-    user-select: none;
+.dragged-row-source, .dragged-col-source {
+    background-color: #CCC;
 }
 
-svg > polygon:hover,
-svg > circle:hover,
-svg > rect:hover {
-    cursor: pointer;
-    fill: rgb(202, 184, 232);
+.dragged-row-target-before td {
+    border-top: 2px solid var(--form-control-color);
+    padding-top: 5px;
+}
+
+.dragged-row-target-after td {
+    border-bottom: 2px solid var(--form-control-color);
+}
+
+tr.dragged-row-target-after + tr td {
+    padding-top: 5px;
+}
+
+td.dragged-col-target-before {
+    border-left: 2px solid var(--form-control-color);
+    padding-left: 1px;
+}
+
+td.dragged-col-target-after {
+    border-right: 2px solid var(--form-control-color);
+}
+
+td.dragged-col-target-after + td {
+    padding-left: 1px;
 }
 
 input[type="checkbox"] {
@@ -207,14 +227,19 @@ input[type="checkbox"].error::before, tr.error input[type="checkbox"]::before {
     box-shadow: inset 1em 1em rgb(209, 11, 11);
 }
 
-#add-row-cell {
-    position: relative;
+#add-row-cell, #add-col-cell {
+    transition: all .1s linear;
 }
 
-#add-row-cell a {
-    position: absolute;
-    top: -0.1em;
-    left: 0.25em;
+.table-dragging-row #add-row-cell, .table-dragging-col #add-col-cell {
+    transform: rotate(-45deg) scale(1.5);
+    display: inline-block;
+    font-weight: bold;
+    color: red;
+}
+
+.del-btn-hover {
+    color: #953b39 !important;
 }
 
 td a {
@@ -229,6 +254,28 @@ tfoot a {
 a:hover {
     color: rgb(85, 39, 160);
     cursor: pointer;
+}
+
+#svg-container {
+    border: 2px solid var(--form-control-color);
+    border-radius: 10px;
+    padding: 15px 5px;
+    box-shadow: 5px 5px 5px #ccc;
+    max-width: 100%;
+    height: auto;
+    position: relative;
+}
+
+#svg-container > text {
+    pointer-events: none;
+    user-select: none;
+}
+
+#svg-container > polygon:hover,
+#svg-container > circle:hover,
+#svg-container > rect:hover {
+    cursor: pointer;
+    fill: rgb(202, 184, 232);
 }
 
 summary {
