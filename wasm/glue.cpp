@@ -5,6 +5,7 @@
 #include <variant>
 #include <vector>
 
+#include <bigint.h>
 #include <emscripten/bind.h>
 
 #include "drawing.h"
@@ -155,11 +156,11 @@ string getLeafOrder() {
 	return ss.str();
 }
 
-uint32_t getOrderCount() {
+string getOrderCount() {
 	if (tree) {
-		return tree->possibleOrders<uint32_t>();
+		return to_string(tree->possibleOrders<Dodecahedron::Bigint>());
 	} else {
-		return 0;
+		return "0";
 	}
 }
 
@@ -169,9 +170,15 @@ string getAllOrders() {
 	}
 	stringstream ss;
 	tree->firstEmbedding();
+	int c = 0;
 	do {
 		printLeafOrder(ss);
 		ss << endl;
+		c++;
+		if (c >= 256) {
+			ss << "too many!" << endl;
+			break;
+		}
 	} while (tree->nextEmbedding());
 	return ss.str();
 }

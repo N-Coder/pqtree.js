@@ -6,11 +6,12 @@ project(PCTreeJS CXX)
 set(CMAKE_CXX_STANDARD 20)
 
 find_package(PCTree REQUIRED)
+get_target_property(PCTree_INCLDIR PCTree INTERFACE_INCLUDE_DIRECTORIES)
 
 set(SOURCE_FILES wasm/layout.cpp wasm/drawing.cpp)
 
-add_library(PCTreeJS ${SOURCE_FILES} wasm/glue.cpp)
-target_include_directories(PCTreeJS PUBLIC ${PCTree_INCLUDE_DIRS})
+add_library(PCTreeJS ${SOURCE_FILES} wasm/glue.cpp "${PCTree_INCLDIR}/../libraries/bigint/src/bigint.cpp")
+target_include_directories(PCTreeJS PUBLIC ${PCTree_INCLUDE_DIRS} "${PCTree_INCLDIR}/../libraries/bigint/src")
 target_link_libraries(PCTreeJS PCTree)
 
 add_executable(test_drawing ${SOURCE_FILES} wasm/test_drawing.cpp)

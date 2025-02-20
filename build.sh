@@ -16,7 +16,7 @@ emmake make -C pctree-build PCTree
 #emmake cmake -S . -B pctreejs-build -DCMAKE_BUILD_TYPE=Release
 #emmake make -C pctreejs-build
 
-emcc wasm/glue.cpp wasm/layout.cpp wasm/drawing.cpp \
-  pctree-build/libPCTree.a -I pctree/include \
+emcc wasm/glue.cpp wasm/layout.cpp wasm/drawing.cpp pctree/libraries/bigint/src/bigint.cpp \
+  pctree-build/libPCTree.a -I pctree/include -I pctree/libraries/bigint/src \
   -lembind -o static/libPCTree.js -Og -g \
   -fwasm-exceptions
