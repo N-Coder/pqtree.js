@@ -1,3 +1,6 @@
 [submodule "pctree"]
 	path = pctree
 	url = https://github.com/N-Coder/pc-tree.git
+[submodule "tourguide-js"]
+	path = tourguide-js
+	url = https://github.com/N-Coder/tourguide-js.git

@@ -3,8 +3,16 @@
 set -x
 set -e
 
-# git submodule update --init --recursive
 # source ../emsdk/emsdk_env.sh
+git submodule update --init --recursive
+
+pushd tourguide-js
+rm -rf dist ../static/tourguide
+npm install
+npm run build
+cp -r dist ../static/tourguide
+popd
+
 
 export CXXFLAGS="-fwasm-exceptions"
 

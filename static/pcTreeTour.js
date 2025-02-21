@@ -1,9 +1,13 @@
 function setMatrix(matrix, circular = false) {
     return function (currentStep, nextStep) {
+        if (block_url_updates) return;
         document.getElementById("toggle-cyclic").checked = circular;
         data = matrix;
+        let old_buu = block_url_updates;
+        block_url_updates = true;
         buildTable();
         update();
+        block_url_updates = old_buu;
     }
 }
 
@@ -18,6 +22,7 @@ const tg = new tourguide.TourGuideClient({
             If you already know your way around, feel free to close this.<br/><br/>
             Note that you can always undo changes to the matrix or reopen this tutorial by pressing your
             browser's back button.`,
+        afterEnter: writeURL
     }, {
         target: "#input-table-wrapper",
         title: "Use-Case",

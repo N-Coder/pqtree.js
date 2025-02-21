@@ -92,7 +92,7 @@ function buildTable() {
             checkbox.checked = data[i][j] === 1;
             checkbox.id = 'checkbox-' + i + '-' + j;
             checkbox.classList.add('input-checkbox');
-            checkbox.addEventListener("click", update);
+            checkbox.addEventListener("change", update);
             cell.appendChild(checkbox);
         }
     }
@@ -403,9 +403,12 @@ function computeHash() {
     return "#" + Object.entries(vars).map(t => t.join("=")).join("&");
 }
 
+let block_url_updates = false;
+
 function writeURL() {
     const hash = computeHash();
-    if (hash != window.location.hash) {
+    if (hash != window.location.hash && !block_url_updates) {
+        // console.log("wrote hash", hash)
         window.history.pushState(hash, "", window.location.origin + window.location.pathname + hash);
     }
 }
@@ -413,6 +416,7 @@ function writeURL() {
 function readURL() {
     if (window.location.hash && window.location.hash != computeHash()) {
         const hash = window.location.hash.substring(1);
+        // console.log("read hash", hash)
         const parts = hash.split('&');
         let vars = {};
         for (let i = 0; i < parts.length; i++) {
@@ -441,18 +445,23 @@ function readURL() {
             document.getElementById("toggle-cyclic").checked = vars["circ"] > 0
         }
 
+        block_url_updates = true;
         buildTable();
         update();
 
         if ("tut" in vars) {
             if (!tg.isVisible) {
                 tg.activeStep = vars["tut"] * 1
-                tg.start()
+                tg.start().finally(() => block_url_updates = false);
             } else {
-                tg.visitStep(vars["tut"] * 1)
+                tg.visitStep(vars["tut"] * 1).finally(() => block_url_updates = false);
             }
         } else {
-            tg.exit()
+            if (tg.isVisible) {
+                setTimeout(() => tg.exit().finally(() => block_url_updates = false), 100);
+            } else {
+                block_url_updates = false;
+            }
         }
     }
 }
