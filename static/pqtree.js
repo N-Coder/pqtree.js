@@ -462,23 +462,31 @@ window.addEventListener('hashchange', readURL)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 document.addEventListener('paste', (event) => {
-    let paste = (event.clipboardData || window.clipboardData).getData('text');
-    // throw away all leading/trailing space and all characters except 0, 1, and \n
-    paste = paste.replace(/^\s+|\s+$/g, '');
-    if (paste.match(/^[01\n]+$/)) {
-        var lines = paste.split('\n');
-        // check that all lines have the same length
-        if (lines.every(line => line.length === lines[0].length)) {
-            data = [];
-            for (let i = 0; i < lines.length; i++) {
-                data.push(lines[i].split("").map(x => parseInt(x)));
-            }
-            buildTable();
-            update();
-        } else {
-            console.error("Could not parse clipboard data with mismatching row lengths", lines);
+    event.preventDefault();
+    const paste = (event.clipboardData || window.clipboardData).getData('text').trim();
+    const lines = paste.split('\n').map(s => s.trim());
+    if (!lines || lines.length < 1) {
+        return;
+    }
+    let new_titles, new_data;
+    let start = 0;
+    if (!lines[0].match(/^[01]+$/)) {
+        new_titles = lines[0].split("|");
+        start = 1;
+    }
+    new_data = [];
+    for (let i = start; i < lines.length; i++) {
+        new_data.push(lines[i].split("").map(x => parseInt(x)));
+        if (new_data.length > 1 && new_data[0].length != new_data.at(-1).length) {
+            console.error("Rejecting line with mismatching row lengths", lines[i]);
+            new_data.pop();
         }
-        event.preventDefault();
+    }
+    if (new_data && new_data.length >= 1 && new_data[0].length > 1) {
+        titles = new_titles;
+        data = new_data
+        buildTable();
+        update();
     }
 });
 
@@ -560,7 +568,7 @@ function reorderMatrix() {
 }
 
 function copyMatrix() {
-    let text = "";
+    let text = titles.join("|") + "\n";
     for (let i = 0; i < data.length; i++) {
         text += data[i].join("") + "\n";
     }
