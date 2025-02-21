@@ -266,14 +266,14 @@ a:hover {
     position: relative;
 }
 
-#svg-container > text {
+#svg-container text {
     pointer-events: none;
     user-select: none;
 }
 
-#svg-container > polygon:hover,
-#svg-container > circle:hover,
-#svg-container > rect:hover {
+#svg-container polygon:hover,
+#svg-container circle:hover,
+#svg-container rect:hover {
     cursor: pointer;
     fill: rgb(202, 184, 232);
 }

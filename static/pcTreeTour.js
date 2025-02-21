@@ -24,6 +24,11 @@ const tg = new tourguide.TourGuideClient({
         content: `We want to reorder the columns of this <a href="https://doi.org/10.1006/jagm.2001.1205">binary matrix</a> such that,
             in each row, the selected cells are consecutive (together and not interrupted by white cells).
             To do this, we can use a datastructure called <a href="https://en.wikipedia.org/wiki/PQ_tree">PQ-tree</a>.`,
+        beforeEnter: setMatrix([
+            [0, 0, 1, 0, 1, 0, 0],
+            [0, 1, 1, 0, 1, 0, 0],
+            [0, 1, 1, 1, 0, 1, 0]
+        ])
     }, {
         target: "#svg-container",
         title: "The PQ-tree",

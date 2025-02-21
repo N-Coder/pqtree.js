@@ -95,9 +95,10 @@ string serializeTree(bool is_circular) {
 
 string treeSpecToMatrix(const string& spec, bool is_circular) {
 	unique_ptr<PCTree> tree;
+	PCTreeNodeArray<string> labels;
 	try {
 		cout << spec << endl;
-		tree = make_unique<PCTree>(spec, true);
+		tree = make_unique<PCTree>(spec, &labels);
 	} catch (const invalid_argument& e) {
 		return string("!") + e.what();
 	}
@@ -112,9 +113,18 @@ string treeSpecToMatrix(const string& spec, bool is_circular) {
 	if (!is_circular) {
 		leaves.erase(std::remove(leaves.begin(), leaves.end(), tree->getRootNode()), leaves.end());
 	}
-	sort(leaves.begin(), leaves.end(), [](PCNode* a, PCNode* b) { return a->index() < b->index(); });
+	sort(leaves.begin(), leaves.end(),
+			[&labels](PCNode* a, PCNode* b) { return labels[a] < labels[b]; });
 
 	stringstream ss;
+	for (auto
+		leaf : leaves) {
+		if (leaf!=leaves.front()) {
+			ss << "|";
+		}
+		ss << labels[leaf];
+	}
+	ss<<endl;
 	PCTreeNodeSet<> cons(*tree);
 	for (const auto& row : restr) {
 		cons.clear();

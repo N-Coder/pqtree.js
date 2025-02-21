@@ -21,7 +21,7 @@ Module = {
         if (window.location.hash) {
             readURL();
         } else {
-            const initialData = ["001010", "011010", "011101"];
+            const initialData = ["0010100", "0110100", "0111010"];
             data = [];
             for (let i = 0; i < initialData.length; i++) {
                 data.push(initialData[i].split("").map(x => parseInt(x)));
@@ -324,6 +324,11 @@ function update(e) {
     const failed_restr = Module.setRestrictions(data.map(line => line.join("")).join("\n"), is_circular, titles.join("|"));
     // document.getElementById("display").innerHTML = res + " " + Module.getLeafOrder();
 
+    if (is_circular) {
+        document.getElementById("export-label").innerHTML = "Export PC-tree figure";
+    } else {
+        document.getElementById("export-label").innerHTML = "Export PQ-tree figure";
+    }
     const svg_cont = document.getElementById("svg-container");
     const tikz_cont = document.getElementById("tikz-container");
     svg_cont.innerHTML = Module.drawSVG(is_circular);
@@ -464,8 +469,9 @@ document.addEventListener('paste', (event) => {
         var lines = paste.split('\n');
         // check that all lines have the same length
         if (lines.every(line => line.length === lines[0].length)) {
+            data = [];
             for (let i = 0; i < lines.length; i++) {
-                data[i] = lines[i].split("").map(x => parseInt(x));
+                data.push(lines[i].split("").map(x => parseInt(x)));
             }
             buildTable();
             update();
@@ -485,8 +491,12 @@ function deserialize() {
     } else {
         document.getElementById("serialize-error").innerHTML = "";
         const lines = matrix.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            data[i] = lines[i].split("").map(x => parseInt(x));
+        titles = lines[0].split("|");
+        data = [];
+        for (let i = 1; i < lines.length; i++) {
+            const l = lines[i].trim();
+            if (!l) continue;
+            data.push(l.split("").map(x => parseInt(x)));
         }
         buildTable();
         update();
@@ -542,7 +552,7 @@ function reorderMatrix() {
         for (let i = 0; i < data[0].length; i++) {
             new_title.push(titles[order[i]]);
         }
-        console.log(order, titles, new_title)
+        // console.log(order, titles, new_title)
         titles = new_title;
     }
     buildTable();
@@ -571,7 +581,7 @@ function nodeMouseOver(e) {
     const idcs = document.querySelectorAll("#input-table thead td.col-title")
         .filter((e) => selected.includes(e.innerHTML.trim()))
         .map((e) => e.cellIndex)
-    console.log(selected, idcs)
+    // console.log(selected, idcs)
     const tbody = document.querySelector("#input-table tbody")
     for (let idx of idcs) {
         for (let checkbox of tbody.querySelectorAll("tr td:nth-child(" + (idx + 1) + ") input.input-checkbox")) {
