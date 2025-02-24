@@ -15,16 +15,22 @@ main {
 
 aside {
     padding: 1em 2em;
-    /* background-color: #3423A6; */
     top: 0;
     height: 100vh;
     box-sizing: border-box;
     background-color: var(--form-control-color);
-    display: flex;
-    flex-direction: column;
     color: white;
     min-width: 26em;
+}
+
+aside, #aside-main {
+    display: flex;
+    flex-direction: column;
     gap: 1em;
+}
+
+#aside-main {
+    padding-bottom: 1em;
 }
 
 aside a,
@@ -285,6 +291,11 @@ summary {
 
 .tg-backdrop {
     pointer-events: none;
+}
+
+#tg-dialog-body img {
+    padding: 5px;
+    box-sizing: border-box;
 }
 
 body.rotated #input-table-container {

@@ -428,39 +428,42 @@ function readURL() {
             }
         }
 
-        if ("mat" in vars) {
-            const mat_rows = vars["mat"].split("|");
-            data = [];
-            for (let i = 0; i < mat_rows.length; i++) {
-                data.push(mat_rows[i].split("").map(x => parseInt(x)));
+        function finalizeTut() {
+            if ("mat" in vars) {
+                const mat_rows = vars["mat"].split("|");
+                data = [];
+                for (let i = 0; i < mat_rows.length; i++) {
+                    data.push(mat_rows[i].split("").map(x => parseInt(x)));
+                }
             }
-        }
-        if ("col" in vars) {
-            titles = vars["col"].split("|");
-        } else {
-            titles = [];
-        }
+            if ("col" in vars) {
+                titles = vars["col"].split("|");
+            } else {
+                titles = [];
+            }
 
-        if ("circ" in vars) {
-            document.getElementById("toggle-cyclic").checked = vars["circ"] > 0
+            if ("circ" in vars) {
+                document.getElementById("toggle-cyclic").checked = vars["circ"] > 0
+            }
+
+            buildTable();
+            update();
+            block_url_updates = false;
         }
 
         block_url_updates = true;
-        buildTable();
-        update();
-
         if ("tut" in vars) {
             if (!tg.isVisible) {
                 tg.activeStep = vars["tut"] * 1
-                tg.start().finally(() => block_url_updates = false);
+                tg.start().finally(finalizeTut);
             } else {
-                tg.visitStep(vars["tut"] * 1).finally(() => block_url_updates = false);
+                tg.visitStep(vars["tut"] * 1).finally(finalizeTut);
             }
         } else {
             if (tg.isVisible) {
-                setTimeout(() => tg.exit().finally(() => block_url_updates = false), 100);
+                setTimeout(() => tg.exit().finally(finalizeTut), 100);
             } else {
-                block_url_updates = false;
+                finalizeTut();
             }
         }
     }
