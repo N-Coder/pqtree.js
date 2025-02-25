@@ -16,14 +16,15 @@ const tg = new tourguide.TourGuideClient({
     propagateEvents: true,
     debug: false,
     completeOnFinish: false,
-    dialogMaxWidth: 400,
+    dialogMaxWidth: 450,
     steps: [{
         target: "#start-tour",
         title: "Hey there! 👋",
         content: `This is a short guide to teach you what PQ- and PC-trees are and how to use this site.
             If you already know your way around, feel free to close this.<br/><br/>
-            Note that you can always undo changes to the matrix or go back in this tutorial by pressing your
-            browser's back button.`,
+            To go back to this tutorial once closed or to undo changes to the matrix, use your browser's back button.
+            You can also always restart the tutorial by clicking this button.
+            To go back and forth in the tutorial, use the arrow keys.`,
         afterEnter: writeURL
     }, {
         title: "The Problem",
@@ -35,10 +36,11 @@ const tg = new tourguide.TourGuideClient({
             <img src="assets/constraint1.svg"/><br/>
             Also, there are two couples who will, respectively, want to sit next to each other.<br/>
             <img src="assets/constraint2.svg"/><br/>
-            <img src="assets/constraint3.svg"/><br/>
+            <img src="assets/constraint3.svg" style="padding-top: 0px"/><br/>
             And there is a pair of best friends between the two couples which we need to place next to each other.<br/>
             <img src="assets/constraint4.svg"/><br/>
-            You now wonder whether there is a structured way to find or even enumerate all <i>admissible</i> seating orders that satisfy all these <i>constraints</i>.`
+            You now wonder how to find some <i>admissible</i> seating order that satisfies all these <i>constraints</i>.
+            Also, if there are many such orders, can we enumerate all of them; and are there even cases where we have no such order at all?`
     }, {
         target: "#input-table-wrapper",
         title: "A Model",
@@ -46,7 +48,7 @@ const tg = new tourguide.TourGuideClient({
             We add one <i>row</i> for each group of people that want to be seated together, setting exactly their entries in the row to 1.
             The problem is now to find a reordering of the columns of the matrix such that, in every row, all ones are <i>consecutive</i>.
             This problem is also known as <a target="_blank" href="https://doi.org/10.1016/S0022-0000(76)80045-1">Consecutive 1's Problem (C1P)</a>.<br/><br/>
-            
+
             You can try finding such orders yourself by dragging the column headings left and right, but we'll look at more systematic way to do this in a second.
             You can also toggle entries by clicking on them.
             Recall that you can also undo changes to the matrix and/or go back to the previous tutorial step using your browser's back button.`,
@@ -110,7 +112,8 @@ const tg = new tourguide.TourGuideClient({
             
             The new Q-node now ensures that we have first the <tt>e,a</tt> couple, joined by the best friends <tt>a,h</tt> with the <tt>h,g</tt> couple, and then the rest of the <tt>g,h,b,c,f</tt> group in arbitrary order.
             Due to the couples and best friends, we can only reverse this order.
-            Note that in any order, the <tt>b,c,f,g,h</tt> group still sits together.`,
+            Note that in any order, the <tt>b,c,f,g,h</tt> group still sits together.
+            In the end, we'll shortly talk about the algorithm used to make these updates correctly.`,
         beforeEnter: setMatrix([
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 1, 0, 0, 1, 1, 1, 0],
@@ -122,7 +125,7 @@ const tg = new tourguide.TourGuideClient({
         target: "#aside-main",
         title: "Finding Admissible Orders",
         content: `To now use the PQ-tree to find a column order that has all 1's consecutive, you can press the "Reorder matrix to consecutive" button.
-            You can also see how many different admissible orders the PQ-tree/matrix have, which we can enumerate by going through all permutations of children for each P-node and by flipping each C-node.`,
+            You can also see how many different admissible orders the PQ-tree/matrix have, which we can enumerate by going through all permutations of children for each P-node and by flipping each Q-node.`,
         beforeEnter: () => {
             document.getElementById("hint-orderings").open = true
         }
@@ -146,9 +149,14 @@ const tg = new tourguide.TourGuideClient({
         content: `If you now also heard that <tt>f,d</tt> want to sit next to each other, you'd run into a problem.
             With this additional restriction, there is no order that satisfies all constraints.<br/><br/>
 
-            The tree shown represents all restrictions up to the unsatisfiable one shown in red.
-            You can drag the rows by their numbers to rearrange them, although you won't find an order for the rows such that all can be satisfied.
-            If all constraints could be satisfied, the order in which they are added would be irrelevant.`,
+            The tree shown represents all restrictions up to the first unsatisfiable one shown in red (also excluding any further ones that would follow).
+            If you look at the large Q-node, you'll immediately see that there is no way to additionally put <tt>f</tt> and <tt>d</tt> next to each other.
+            You can also delete the failing row by dragging it onto the plus icon below (which then turns into a red X), and then check the list of compatible orderings
+            &mdash; there are none with <tt>f,d</tt> consecutive.<br/><br/>
+
+            Note that you can drag the rows by their numbers to rearrange them and thus change the order in which they are added to the tree.
+            Although you won't find an order for the rows such that all can be satisfied,
+            if all constraints could be satisfied, the order in which they are added would be irrelevant.`,
         beforeEnter: setMatrix([
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 1, 1, 1, 1, 1],
@@ -188,6 +196,8 @@ const tg = new tourguide.TourGuideClient({
     }, {
         title: "The End",
         content: `This concludes the tour of this site.
+        We've seen that the (Circular) Consecutive 1's Problem can efficiently be solved (in linear time even!),
+        and that, if there are orders that satisfy all constraints, we can easily enumerate them.
         If you want to learn more about PQ- & PC-trees, especially how a tree updated with new constraints is computed,
         you can also check out this <a target="_blank" href="https://tryalgo.org/en/data%20structures/2024/01/03/pc-trees/">tryalgo article</a>
         (or its <a target="_blank" href="https://tryalgo.org/en/data%20structures/2017/12/15/pq-trees/">prior version</a> focusing on PQ-trees).
@@ -196,7 +206,13 @@ const tg = new tourguide.TourGuideClient({
         and PC-trees by 
             <a target="_blank" href="https://doi.org/10.1016/S0304-3975(02)00435-8">Hsu and McConnell</a>.
         A more modern explanation of both data structures, their workings and their differences can be found starting on page 10 of this
-            <a target="_blank" href="https://doi.org/10.15475/cpatp.2024">thesis</a>.`,
+            <a target="_blank" href="https://doi.org/10.15475/cpatp.2024">thesis</a>.<br/><br/>
+        <details>
+            <summary>Some more hints...</summary>
+            You can add new columns and rows by clicking on the plus buttons, dragging a column or row onto this button (which turns into a red X) deletes it.
+            Double click column titles to rename them (but don't use too long names).
+            And don't forget to check out all the different entries in the sidebar!
+        </details>`,
     }]
 })
 

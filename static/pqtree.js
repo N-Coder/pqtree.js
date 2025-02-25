@@ -4,8 +4,13 @@ const rowOf = (cell) => cell.closest("tr");
 
 const cellOf = (cell) => cell.closest("td");
 
-if (window.NodeList && !NodeList.prototype.filter) {
-    NodeList.prototype.filter = Array.prototype.filter;
+if (window.NodeList) {
+    if (!NodeList.prototype.filter) {
+        NodeList.prototype.filter = Array.prototype.filter;
+    }
+    if (!NodeList.prototype.map) {
+        NodeList.prototype.map = Array.prototype.map;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -28,6 +33,7 @@ Module = {
             }
             buildTable();
             update();
+            setTimeout(() => tg.start(), 100);
         }
     }
 };
@@ -315,7 +321,7 @@ function update(e) {
         }
         data.push(line);
     }
-    titles = Array.from(table.querySelectorAll("thead td.col-title").values().map(n => n.innerHTML));
+    titles = Array.from(table.querySelectorAll("thead td.col-title").map(n => n.innerHTML));
     ensureTitles();
 
     writeURL();
@@ -362,7 +368,7 @@ function update(e) {
 
     document.getElementById("input-serialize").value = Module.serializeTree(is_circular);
 
-    document.querySelectorAll("#input-table tr").forEach(tr => tr.classList.remove("error"));
+    document.querySelectorAll("#input-table tr").forEach(tr => tr.classList.remove("error", "error-after"));
     if (failed_restr < 0) {
         var num = Module.getOrderCount();
         document.getElementById("numberOfEncodedOrderings").innerHTML = num;
@@ -376,8 +382,9 @@ function update(e) {
         document.getElementById("numberOfEncodedOrderings").innerHTML = "0";
         document.getElementById("allOrderings").innerHTML = "No valid order";
         document.getElementById("reorder-button").disabled = true;
-        document.querySelectorAll("#input-table tbody tr:nth-child(" + (failed_restr + 1) + ")")
-            .forEach(tr => tr.classList.add("error"));
+        document.querySelector("#input-table tbody tr:nth-child(" + (failed_restr + 1) + ")").classList.add("error");
+        document.querySelectorAll("#input-table tbody tr:nth-child(1n+" + (failed_restr + 2) + ")")
+            .forEach(tr => tr.classList.add("error-after"));
     }
     document.getElementById("serialize-error").innerHTML = "";
 
@@ -387,8 +394,6 @@ function update(e) {
         }, 100);
     }
 }
-
-document.getElementById("toggle-cyclic").addEventListener("click", update);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -401,15 +406,13 @@ function computeHash() {
         vars["tut"] = tg.activeStep;
     }
     if (data && data.length > 0) {
-        const n = data[0].length;
-        let tit_ref = [];
-        for (let i = 0; i < n; i++) {
-            tit_ref.push(i + "");
+        const old_titles = titles;
+        titles = [];
+        ensureTitles();
+        if (old_titles != titles) {
+            vars["col"] = old_titles.join("|");
         }
-        const tit_act = titles.join("|");
-        if (tit_act != tit_ref.join("|")) {
-            vars["col"] = tit_act;
-        }
+        titles = old_titles;
     }
     return "#" + Object.entries(vars).map(t => t.join("=")).join("&");
 }

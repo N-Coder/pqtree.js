@@ -83,7 +83,8 @@
             </details>
 
             <details id="hint-cyclic">
-                <summary><input type="checkbox" id="toggle-cyclic"/> <label for="toggle-cyclic">Cyclic Orders</label>
+                <summary><input type="checkbox" id="toggle-cyclic" onchange="update()"/> <label for="toggle-cyclic">Cyclic
+                    Orders</label>
                 </summary>
                 <p>When also considering cyclic instead of only linear orders, we also allow 1's to wrap around as in
                     11000111. In the cyclic setting, the PQ-tree is often also called PC-tree, where C-nodes behave

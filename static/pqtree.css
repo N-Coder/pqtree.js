@@ -245,6 +245,15 @@ input[type="checkbox"].error::before, tr.error input[type="checkbox"]::before {
     box-shadow: inset 1em 1em rgb(209, 11, 11);
 }
 
+input[type="checkbox"].error-after, tr.error-after input[type="checkbox"] {
+    border-color: rgb(115, 36, 27);
+    box-shadow: inset 0 0 3px rgb(143, 31, 31);
+}
+
+input[type="checkbox"].error-after::before, tr.error-after input[type="checkbox"]::before {
+    box-shadow: inset 1em 1em rgb(143, 31, 31);
+}
+
 #add-row-cell, #add-col-cell {
     transition: all .1s linear;
 }
@@ -306,7 +315,7 @@ summary {
 }
 
 #tg-dialog-body img {
-    padding: 5px;
+    padding: 15px 25px;
     box-sizing: border-box;
 }
 
