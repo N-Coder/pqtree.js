@@ -38,7 +38,7 @@ const tg = new tourguide.TourGuideClient({
             <img src="assets/constraint3.svg"/><br/>
             And there is a pair of best friends between the two couples which we need to place next to each other.<br/>
             <img src="assets/constraint4.svg"/><br/>
-            While the images readily show one possible seating order, you wonder if there is a structured way to enumerate all admissible orders.`
+            You now wonder whether there is a structured way to find or even enumerate all <i>admissible</i> seating orders that satisfy all these <i>constraints</i>.`
     }, {
         target: "#input-table-wrapper",
         title: "A Model",
@@ -56,8 +56,6 @@ const tg = new tourguide.TourGuideClient({
             [1, 0, 0, 0, 1, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 1, 0],
             [1, 0, 0, 0, 0, 0, 0, 1, 0],
-            [0, 0, 0, 1, 1, 0, 0, 0, 1],
-            // [0,1,0,0,0,0,0,0,1],
         ])
     }, {
         target: "#svg-container",
@@ -66,14 +64,14 @@ const tg = new tourguide.TourGuideClient({
             Its leaves correspond to the elements we want to order.
             They are connected through two different types of inner nodes that describe how the leaves can be reordered:
             The first type are the round <i>P-nodes</i>, which allow arbitrarily changing the order of their children.
-            So the rooted tree as it currently is would allow all permutations of students, with no regard to their seating preferences.`,
+            So this tree that we will start with allows all permutations of students, with no regard to their seating preferences.`,
         beforeEnter: setMatrix([
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
         ])
     }, {
         target: "#main-content",
         title: "Adding Restrictions",
-        content: `If we now want to ensure that the friend group <tt>b,c,f,g,h</tt> is consecutive, we add a row to the matrix where exactly those entries are set to 1.
+        content: `If we initially want to ensure that the friend group <tt>b,c,f,g,h</tt> is consecutive, we add a row to the matrix where exactly those entries are set to 1.
             The PQ-tree is automatically updated such that its represented orders are restricted to those ones where <tt>b,c,f,g,h</tt> are consecutive.
             In this case, this splits the central P-node into two P-nodes, that now prevent that their respective leaves getting mixed.<br/><br/>
             
@@ -81,11 +79,6 @@ const tg = new tourguide.TourGuideClient({
         beforeEnter: setMatrix([
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 1, 0, 0, 1, 1, 1, 0],
-            // [1,0,0,0,1,0,0,0,0],
-            // [0,0,0,0,0,0,1,1,0],
-            // [1,0,0,0,0,0,0,1,0],
-            // [0,0,0,1,1,0,0,0,1],
-            // [0,1,0,0,0,0,0,0,1],
         ])
     }, {
         target: "#main-content",
@@ -95,10 +88,6 @@ const tg = new tourguide.TourGuideClient({
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 1, 0, 0, 1, 1, 1, 0],
             [1, 0, 0, 0, 1, 0, 0, 0, 0],
-            // [0,0,0,0,0,0,1,1,0],
-            // [1,0,0,0,0,0,0,1,0],
-            // [0,0,0,1,1,0,0,0,1],
-            // [0,1,0,0,0,0,0,0,1],
         ])
     }, {
         target: "#main-content",
@@ -112,9 +101,6 @@ const tg = new tourguide.TourGuideClient({
             [0, 1, 1, 0, 0, 1, 1, 1, 0],
             [1, 0, 0, 0, 1, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 1, 0],
-            // [1,0,0,0,0,0,0,1,0],
-            // [0,0,0,1,1,0,0,0,1],
-            // [0,1,0,0,0,0,0,0,1],
         ])
     }, {
         target: "#main-content",
@@ -131,8 +117,6 @@ const tg = new tourguide.TourGuideClient({
             [1, 0, 0, 0, 1, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 1, 0],
             [1, 0, 0, 0, 0, 0, 0, 1, 0],
-            // [0,0,0,1,1,0,0,0,1],
-            // [0,1,0,0,0,0,0,0,1],
         ])
     }, {
         target: "#aside-main",
@@ -213,7 +197,7 @@ const tg = new tourguide.TourGuideClient({
             <a target="_blank" href="https://doi.org/10.1016/S0304-3975(02)00435-8">Hsu and McConnell</a>.
         A more modern explanation of both data structures, their workings and their differences can be found starting on page 10 of this
             <a target="_blank" href="https://doi.org/10.15475/cpatp.2024">thesis</a>.`,
-    }].toReversed()
+    }]
 })
 
 tg.onAfterExit(writeURL)
