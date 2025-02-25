@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <queue>
 
 using namespace std;
 using namespace pc_tree;
@@ -39,25 +40,26 @@ Point computePositionsLinear(PCNode* node, double left, double top, Layout& posi
 	return {width + vPadding, height + levelHeight};
 }
 
-double computeCircularWeight(PCTree& tree, PCTreeNodeArray<double>& weights, double inner_weight,
-		double leaf_weight, function<double(double, double)> fold) {
-	vector<PCNode*> nodes(tree.allNodes(), FilteringPCTreeDFS());
-	std::reverse(nodes.begin(),
-			nodes.end()); // TODO still goes towards root, not away from leaves
-	double max_weight = 0;
-	for (auto node : nodes) {
-		if (node->isLeaf()) {
-			weights[node] = leaf_weight;
-		} else {
-			double w = inner_weight;
-			for (auto child : node->children()) {
-				w = fold(w, weights[child]);
-			}
-			weights[node] = w;
-			max_weight = max(max_weight, w);
-		}
+void computeCircularWeightByHeight(PCTree& tree, PCTreeNodeArray<double>& weights, double a,
+		double r) {
+	PCTreeNodeArray<bool> visited(tree, false);
+	queue<std::pair<PCNode*, int>> todo;
+	for (auto l : tree.getLeaves()) {
+		visited[l] = true;
+		weights[l] = a;
+		todo.emplace(l->getParent(), 1);
 	}
-	return max_weight;
+	while (!todo.empty()) {
+		auto n = todo.front().first;
+		auto h = todo.front().second;
+		todo.pop();
+		if (n == nullptr || visited[n]) {
+			continue;
+		}
+		weights[n] = a / std::pow(r, h);
+		visited[n] = true;
+		todo.emplace(n->getParent(), h + 1);
+	}
 }
 
 void computePositionsCircular(PCTree& tree, Layout& positions, double radius,

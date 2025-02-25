@@ -51,6 +51,18 @@
                     <input class="cl-pq" type="number" id="cl-nodepadding" min="0" value="30" onchange="update()"/>
                     <label class="cl-pc" for="cl-radius">Radius:</label>
                     <input class="cl-pc" type="number" id="cl-radius" min="50" value="200" onchange="update()"/>
+                    <label class="cl-pc" for="cl-weightsR">
+                        <a target="_blank"
+                           href="https://link.springer.com/chapter/10.1007/978-3-031-49275-4_10#ref-link-section-d12278620e3283">
+                            Weight Factor <tt>r</tt></a>:
+                    </label>
+                    <input class="cl-pc" type="number" id="cl-weightsR" min="0" step=".1" value="1"
+                           onchange="update()"/>
+                </div>
+                <div style="display: none">
+                    <label class="cl-pc" for="cl-weightsA">Weight Factor <tt>a</tt>:</label>
+                    <input class="cl-pc" type="number" id="cl-weightsA" min="0.1" step=".1" value="1"
+                           onchange="update()"/>
                 </div>
             </details>
 

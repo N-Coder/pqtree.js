@@ -337,6 +337,8 @@ function update(e) {
     params.nodeSize = document.getElementById("cl-nodesize").value;
     params.nodePadding = document.getElementById("cl-nodepadding").value;
     params.radius = document.getElementById("cl-radius").value;
+    params.circWeightsA = document.getElementById("cl-weightsA").value;
+    params.circWeightsR = document.getElementById("cl-weightsR").value;
     document.querySelectorAll("#config-layout .cl-pq").forEach((e) => e.style.display = is_circular ? "none" : "");
     document.querySelectorAll("#config-layout .cl-pc").forEach((e) => e.style.display = is_circular ? "" : "none");
 

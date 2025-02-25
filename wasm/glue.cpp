@@ -197,6 +197,8 @@ struct DrawingParams {
 	int levelHeight = 80;
 	int nodeSize = 40;
 	int nodePadding = 30;
+	double circWeightsA = 1;
+	double circWeightsR = 1;
 };
 
 DrawingParams drawing_params;
@@ -212,13 +214,10 @@ string draw(Drawer* drawer) {
 	stringstream ss;
 	drawer->node_size = drawing_params.nodeSize;
 	if (dynamic_cast<CircularDrawer*>(drawer)) {
-		PCTreeNodeArray<double> weights(*tree);
-		// TODO improve line length ratios by using better weights
-		// double max_weight = computeCircularWeightByHeight(*tree, weights);
-		// for (auto node : tree->allNodes()) {
-		//   weights[node] = max_weight - weights[node] + 1;
-		// }
-		computePositionsCircular(*tree, positions, drawing_params.radius, nullptr);
+		PCTreeNodeArray<double> weights(*tree, 1);
+		computeCircularWeightByHeight(*tree, weights, drawing_params.circWeightsA,
+				drawing_params.circWeightsR);
+		computePositionsCircular(*tree, positions, drawing_params.radius, &weights);
 
 		CircularDrawer& cdrawer = *dynamic_cast<CircularDrawer*>(drawer);
 		cdrawer.labels = &labels;
@@ -286,7 +285,9 @@ EMSCRIPTEN_BINDINGS(PCTreeModule) {
 			.property("radius", &DrawingParams::radius)
 			.property("nodeSize", &DrawingParams::nodeSize)
 			.property("levelHeight", &DrawingParams::levelHeight)
-			.property("nodePadding", &DrawingParams::nodePadding);
+			.property("nodePadding", &DrawingParams::nodePadding)
+			.property("circWeightsA", &DrawingParams::circWeightsA)
+			.property("circWeightsR", &DrawingParams::circWeightsR);
 
 	emscripten::function("getDrawingParams", &getDrawingParams,
 			emscripten::return_value_policy::reference());

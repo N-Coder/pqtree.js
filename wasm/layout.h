@@ -25,20 +25,14 @@ inline Point computePositionsLinear(pc_tree::PCTree& tree, double left, double t
 void gaussianElimination(std::vector<std::vector<double>>& augmentedMatrix,
 		std::vector<double>& result);
 
-double computeCircularWeight(pc_tree::PCTree& tree, pc_tree::PCTreeNodeArray<double>& weights,
-		double inner_weight, double leaf_weight, std::function<double(double, double)> fold);
-
-inline double computeCircularWeightByHeight(pc_tree::PCTree& tree,
-		pc_tree::PCTreeNodeArray<double>& weights) {
-	return computeCircularWeight(tree, weights, 0, 1,
-			[](double c, double n) { return std::max(c + 1, n); });
-}
-
-inline double computeCircularWeightBySubtreeSize(pc_tree::PCTree& tree,
-		pc_tree::PCTreeNodeArray<double>& weights, double inner_weight = 1) {
-	return computeCircularWeight(tree, weights, inner_weight, 1,
-			[](double c, double n) { return c + n; });
-}
+/**
+ * "Weight Manipulation via Spanning Tree Depth"
+ * Alvin Chiu, David Eppstein, Michael T. Goodrich:
+ * Manipulating Weights to Improve Stress-Graph Drawings of 3-Connected Planar
+ * Graphs. GD 2023 https://doi.org/10.1007/978-3-031-49275-4_10
+ */
+void computeCircularWeightByHeight(pc_tree::PCTree& tree, pc_tree::PCTreeNodeArray<double>& weights,
+		double a, double r);
 
 /**
  * Computes all node positions using Tutte's method with all leaves
@@ -47,10 +41,6 @@ inline double computeCircularWeightBySubtreeSize(pc_tree::PCTree& tree,
  * W. T. Tutte:
  * How to Draw a Graph. Proceedings of the London Mathematical Society 1963
  * https://doi.org/10.1112/plms/s3-13.1.743
- *
- * Alvin Chiu, David Eppstein, Michael T. Goodrich:
- * Manipulating Weights to Improve Stress-Graph Drawings of 3-Connected Planar
- * Graphs. GD 2023 https://doi.org/10.1007/978-3-031-49275-4_10
  */
 void computePositionsCircular(pc_tree::PCTree& tree, Layout& positions, double radius,
 		pc_tree::PCTreeNodeArray<double>* weights = nullptr, double off_x = 0, double off_y = 0);
