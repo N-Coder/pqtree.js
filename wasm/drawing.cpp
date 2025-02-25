@@ -18,7 +18,7 @@ void LinearDrawer::draw(const PCTree& tree, const Layout& positions, std::ostrea
 		}
 
 		if (node->getNodeType() == PCNodeType::PNode && node != tree.getRootNode()) {
-			cy += pNode_yShift;
+			cy += node_size / 2;
 		}
 
 		for (auto child : node->children()) {
@@ -26,7 +26,7 @@ void LinearDrawer::draw(const PCTree& tree, const Layout& positions, std::ostrea
 			childCX += offset_x;
 			childCY += offset_y;
 			if (child->getNodeType() == PCNodeType::PNode) {
-				childCY += pNode_yShift;
+				childCY += node_size / 2;
 			}
 			drawLine(ss, (node->getNodeType() == PCNodeType::PNode ? cx : childCX), cy, childCX,
 					childCY);
@@ -46,7 +46,6 @@ void LinearDrawer::draw(const PCTree& tree, const Layout& positions, std::ostrea
 
 std::tuple<std::string, double> LinearDrawer::getTrianglePath(double cx, double cy,
 		double sideLength) {
-	// cy -= 15;
 	double ratio = 0.866; // equilateral triangle
 	std::stringstream points;
 	points << cx << "," << cy << " ";
@@ -62,15 +61,15 @@ std::tuple<double, double, double, double> LinearDrawer::getQNodeSize(PCNode* no
 	cx += offset_x;
 	cy += offset_y;
 
-	auto height = 0.3 * 80; // levelHeight
-	double left_x = 0, width = 0;
+	auto height = node_size * 0.75;
+	double left_x = 0, width = 0, buffer = 0;
 	if (widths && (*widths)[node] > 0) {
-		auto buffer = 0.1 * 70; // leafWidth
+		// auto buffer = 0.1 * 70; // leafWidth
 		width = (*widths)[node];
 		left_x = cx - width / 2 + buffer;
 		width -= 2 * buffer;
 	} else {
-		auto buffer = 0.4 * 70; // leafWidth
+		// auto buffer = 0.4 * 70; // leafWidth
 		double first_child_x = std::get<0>(positions[node->getChild1()]) + offset_x;
 		double last_child_x = std::get<0>(positions[node->getChild2()]) + offset_x;
 		if (first_child_x > last_child_x) {

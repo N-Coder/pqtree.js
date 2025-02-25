@@ -8,32 +8,35 @@ using namespace std;
 using namespace pc_tree;
 
 Point computePositionsLinear(PCNode* node, double left, double top, Layout& positions,
-		PCTreeNodeArray<double>* subtree_widths, double levelHeight, double leafWidth) {
+		PCTreeNodeArray<double>* subtree_widths, double levelHeight, double leafWidth,
+		double vPadding) {
+	left += vPadding;
 	if (node->isLeaf()) {
 		if (node->isDetached()) { // root
 			auto [child_width, child_heigh] = computePositionsLinear(node->getOnlyChild(), left,
-					top + levelHeight, positions, subtree_widths, levelHeight, leafWidth);
+					top + levelHeight, positions, subtree_widths, levelHeight, leafWidth, vPadding);
 			positions[node] = {left + child_width / 2, top};
-			return {child_width, child_heigh + levelHeight};
+			return {child_width + vPadding, child_heigh + levelHeight};
 		} else { // ordinary leaf
 			positions[node] = {left + leafWidth / 2, top};
-			return {leafWidth, levelHeight};
+			return {leafWidth + vPadding, levelHeight};
 		}
 	}
 	double width = 0;
 	double height = 0;
 	for (auto child : node->children()) {
 		auto [child_width, child_heigh] = computePositionsLinear(child, left + width,
-				top + levelHeight, positions, subtree_widths, levelHeight, leafWidth);
+				top + levelHeight, positions, subtree_widths, levelHeight, leafWidth, vPadding);
 		width += child_width;
 		height = max(height, child_heigh);
 	}
+	width += vPadding;
 	positions[node] = {left + width / 2, top};
 	if (subtree_widths) {
 		(*subtree_widths)[node] = width;
 	}
 	// cout << node->index() << " " << width << ' ' << height << endl;
-	return {width, height + levelHeight};
+	return {width + vPadding, height + levelHeight};
 }
 
 double computeCircularWeight(PCTree& tree, PCTreeNodeArray<double>& weights, double inner_weight,

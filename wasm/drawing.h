@@ -11,6 +11,7 @@ using namespace pc_tree;
 struct Drawer {
 	double offset_x;
 	double offset_y;
+	double node_size;
 
 	PCTreeNodeArray<std::string>* labels;
 
@@ -61,14 +62,11 @@ struct LinearDrawer : virtual Drawer {
 	double width;
 	double height;
 
-	int pNode_yShift = 15;
-
 	virtual void drawQNode(std::ostream& ss, double x, double y, double width, double height) = 0;
 
 	void draw(const PCTree& tree, const Layout& positions, std::ostream& ss) override;
 
-	virtual std::tuple<std::string, double> getTrianglePath(double cx, double cy,
-			double sideLength = 40);
+	virtual std::tuple<std::string, double> getTrianglePath(double cx, double cy, double sideLength);
 
 	virtual std::tuple<double, double, double, double> getQNodeSize(PCNode* node,
 			const Layout& positions);
@@ -96,10 +94,8 @@ struct SVGDrawer : virtual Drawer {
 };
 
 struct SVGCircularDrawer : virtual SVGDrawer, virtual CircularDrawer {
-	double leaf_radius = 15;
-
 	void writeHeader(std::ostream& ss) override {
-		double act_rad = offset_x = offset_y = radius + leaf_radius + 1;
+		double act_rad = offset_x = offset_y = radius + (node_size / 2) + 1;
 		double size = act_rad * 2;
 		ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << size << "\" height=\"" << size
 		   << "\">";
@@ -110,7 +106,7 @@ struct SVGCircularDrawer : virtual SVGDrawer, virtual CircularDrawer {
 
 	void drawLeaf(std::ostream& ss, double cx, double cy, std::string label) override {
 		writeXMLNode(ss, "circle",
-				{{"cx", cx}, {"cy", cy}, {"r", leaf_radius}, {"fill", "white"},
+				{{"cx", cx}, {"cy", cy}, {"r", node_size / 2}, {"fill", "white"},
 						{"stroke", "#666666"}, {"data-leaves", label}});
 		writeXMLNode(ss, "text",
 				{{"x", cx}, {"y", cy}, {"text-anchor", "middle"}, {"dominant-baseline", "central"},
@@ -119,15 +115,17 @@ struct SVGCircularDrawer : virtual SVGDrawer, virtual CircularDrawer {
 
 	void drawPNode(std::ostream& ss, double cx, double cy) override {
 		writeXMLNode(ss, "circle",
-				{{"cx", cx}, {"cy", cy}, {"r", "5"}, {"fill", "black"}, {"stroke", "black"}});
+				{{"cx", cx}, {"cy", cy}, {"r", node_size / 6}, {"fill", "black"},
+						{"stroke", "black"}});
 	}
 
 	void drawCNode(std::ostream& ss, double cx, double cy) override {
 		writeXMLNode(ss, "circle",
-				{{"cx", cx}, {"cy", cy}, {"r", "20"}, {"fill", "#ececec"}, {"stroke", "black"}});
+				{{"cx", cx}, {"cy", cy}, {"r", node_size * 0.65}, {"fill", "#ececec"},
+						{"stroke", "black"}});
 		writeXMLNode(ss, "circle",
-				{{"cx", cx}, {"cy", cy}, {"r", "15"}, {"fill", "transparent"}, {"stroke", "black"},
-						{"pointer-events", "none"}});
+				{{"cx", cx}, {"cy", cy}, {"r", node_size / 2}, {"fill", "transparent"},
+						{"stroke", "black"}, {"pointer-events", "none"}});
 		writeXMLNode(ss, "text",
 				{{"x", (cx - 1)}, {"y", cy}, {"text-anchor", "middle"},
 						{"dominant-baseline", "central"}, {"text", "C"}});
@@ -141,7 +139,7 @@ struct SVGLinearDrawer : virtual SVGDrawer, virtual LinearDrawer {
 	}
 
 	void drawLeaf(std::ostream& ss, double cx, double cy, std::string label) override {
-		auto [tri, mid_y] = getTrianglePath(cx, cy);
+		auto [tri, mid_y] = getTrianglePath(cx, cy, node_size);
 		writeXMLNode(ss, "polygon",
 				{{"points", tri}, {"fill", "white"}, {"stroke", "black"}, {"data-leaves", label}});
 		writeXMLNode(ss, "text",
@@ -151,8 +149,8 @@ struct SVGLinearDrawer : virtual SVGDrawer, virtual LinearDrawer {
 
 	void drawPNode(std::ostream& ss, double cx, double cy) override {
 		writeXMLNode(ss, "circle",
-				{{"cx", cx}, {"cy", cy}, {"r", "15"}, {"fill", "#ececec"}, {"stroke", "black"},
-						{"data-leaves", getLeaves(cur_node)}});
+				{{"cx", cx}, {"cy", cy}, {"r", node_size / 2}, {"fill", "#ececec"},
+						{"stroke", "black"}, {"data-leaves", getLeaves(cur_node)}});
 		writeXMLNode(ss, "text",
 				{{"x", (cx + 0.4)}, {"y", cy}, {"text-anchor", "middle"},
 						{"dominant-baseline", "central"}, {"text", "P"}});
@@ -218,7 +216,7 @@ struct IPEDrawer : virtual Drawer {
 struct IPECircularDrawer : virtual IPEDrawer, virtual CircularDrawer {
 	void writeHeader(std::ostream& ss) override {
 		IPEDrawer::writeHeader(ss);
-		double act_rad = offset_x = offset_y = radius + 15 + 1;
+		double act_rad = offset_x = offset_y = radius + (node_size / 2) + 1;
 		offset_y -= 2 * act_rad;
 		writeXMLNode(ss, "path",
 				{{"stroke", "black"}, {"text", getCirclePath(radius, offset_x, offset_y)},
@@ -250,8 +248,8 @@ struct IPELinearDrawer : virtual IPEDrawer, virtual LinearDrawer {
 
 	void drawPNode(std::ostream& ss, double cx, double cy) override {
 		writeXMLNode(ss, "path",
-				{{"stroke", "black"}, {"fill", "white"}, {"text", getCirclePath(15, cx, cy)},
-						{"layer", "alpha"}})
+				{{"stroke", "black"}, {"fill", "white"},
+						{"text", getCirclePath(node_size / 2, cx, cy)}, {"layer", "alpha"}})
 				<< std::endl;
 		drawText(ss, cx, cy, "P");
 	}
@@ -288,31 +286,29 @@ struct TikzDrawer : virtual Drawer {
 };
 
 struct TikzCircularDrawer : virtual TikzDrawer, virtual CircularDrawer {
-	double leaf_radius = 15;
-
 	void writeHeader(std::ostream& ss) override {
 		ss << "\\begin{tikzpicture}[leaf/.style={fill=white},pnode/.style={fill=black},"
 			  "cnode/.style={fill=black!10, double distance=2.5pt},"
 			  "background/.style={color=black!20}]\n";
-		double act_rad = offset_x = offset_y = radius + leaf_radius;
+		double act_rad = offset_x = offset_y = radius + (node_size / 2);
 		ss << "\\draw[background] (" << s(offset_x) << "," << s(-offset_y)
 		   << ") circle [radius=" << s(radius) << "];" << std::endl;
 	}
 
 	void drawLeaf(std::ostream& ss, double cx, double cy, std::string label) override {
-		ss << "\\draw[leaf] (" << s(cx) << "," << s(-cy) << ") circle [radius=" << s(leaf_radius)
+		ss << "\\draw[leaf] (" << s(cx) << "," << s(-cy) << ") circle [radius=" << s(node_size / 2)
 		   << "];" << std::endl;
 		drawText(ss, s(cx), s(-cy), label);
 	}
 
 	void drawPNode(std::ostream& ss, double cx, double cy) override {
-		ss << "\\draw[pnode] (" << s(cx) << "," << s(-cy) << ") circle [radius=" << s(5) << "];"
-		   << std::endl;
+		ss << "\\draw[pnode] (" << s(cx) << "," << s(-cy) << ") circle [radius=" << s(node_size / 6)
+		   << "];" << std::endl;
 	}
 
 	void drawCNode(std::ostream& ss, double cx, double cy) override {
-		ss << "\\draw[cnode] (" << s(cx) << "," << s(-cy) << ") circle [radius=" << s(18) << "];"
-		   << std::endl;
+		ss << "\\draw[cnode] (" << s(cx) << "," << s(-cy)
+		   << ") circle [radius=" << s(node_size * 0.65) << "];" << std::endl;
 		drawText(ss, s(cx), s(-cy), "C");
 	}
 };
@@ -325,7 +321,7 @@ struct TikzLinearDrawer : virtual TikzDrawer, virtual LinearDrawer {
 	}
 
 	void drawLeaf(std::ostream& ss, double cx, double cy, std::string label) override {
-		auto [tri, mid_y] = getTrianglePath(s(cx), s(cy), s(40));
+		auto [tri, mid_y] = getTrianglePath(s(cx), s(cy), s(node_size));
 		tri = std::regex_replace(tri, std::regex(" "), ") -- (");
 		tri = std::regex_replace(tri, std::regex(","), ",-");
 		ss << "\\draw[leaf](" << tri << ") -- cycle;" << std::endl;
@@ -333,8 +329,8 @@ struct TikzLinearDrawer : virtual TikzDrawer, virtual LinearDrawer {
 	}
 
 	void drawPNode(std::ostream& ss, double cx, double cy) override {
-		ss << "\\draw[pnode] (" << s(cx) << "," << s(-cy) << ") circle [radius=" << s(15) << "];"
-		   << std::endl;
+		ss << "\\draw[pnode] (" << s(cx) << "," << s(-cy) << ") circle [radius=" << s(node_size / 2)
+		   << "];" << std::endl;
 		drawText(ss, s(cx), s(-cy), "P");
 	}
 

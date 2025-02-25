@@ -331,6 +331,15 @@ function update(e) {
     }
     const svg_cont = document.getElementById("svg-container");
     const tikz_cont = document.getElementById("tikz-container");
+
+    const params = Module.getDrawingParams();
+    params.levelHeight = document.getElementById("cl-levelheight").value;
+    params.nodeSize = document.getElementById("cl-nodesize").value;
+    params.nodePadding = document.getElementById("cl-nodepadding").value;
+    params.radius = document.getElementById("cl-radius").value;
+    document.querySelectorAll("#config-layout .cl-pq").forEach((e) => e.style.display = is_circular ? "none" : "");
+    document.querySelectorAll("#config-layout .cl-pc").forEach((e) => e.style.display = is_circular ? "" : "none");
+
     svg_cont.innerHTML = Module.drawSVG(is_circular);
     tikz_cont.innerHTML = Module.drawTikz(is_circular);
     for (let node of svg_cont.childNodes[0].childNodes) {

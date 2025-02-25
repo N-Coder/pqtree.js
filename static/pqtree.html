@@ -40,6 +40,20 @@
                 <pre id="allOrderings"></pre>
             </details>
 
+            <details id="hint-layout">
+                <summary>Configure Layout</summary>
+                <div id="config-layout">
+                    <label class="cl-pq" for="cl-levelheight">Layer Height:</label>
+                    <input class="cl-pq" type="number" id="cl-levelheight" min="10" value="80" onchange="update()"/>
+                    <label for="cl-nodesize">Node Size:</label>
+                    <input type="number" id="cl-nodesize" min="10" value="40" onchange="update()"/>
+                    <label class="cl-pq" for="cl-nodepadding">Vertical Padding:</label>
+                    <input class="cl-pq" type="number" id="cl-nodepadding" min="0" value="30" onchange="update()"/>
+                    <label class="cl-pc" for="cl-radius">Radius:</label>
+                    <input class="cl-pc" type="number" id="cl-radius" min="50" value="200" onchange="update()"/>
+                </div>
+            </details>
+
             <details id="hint-export">
                 <summary id="export-label">Export PQ-tree figure</summary>
                 <p><a id="svg-download"></a> <a id="ipe-download" style="padding-left: 10px"></a></p>

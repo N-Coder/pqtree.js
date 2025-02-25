@@ -117,14 +117,13 @@ string treeSpecToMatrix(const string& spec, bool is_circular) {
 			[&labels](PCNode* a, PCNode* b) { return labels[a] < labels[b]; });
 
 	stringstream ss;
-	for (auto
-		leaf : leaves) {
-		if (leaf!=leaves.front()) {
+	for (auto leaf : leaves) {
+		if (leaf != leaves.front()) {
 			ss << "|";
 		}
 		ss << labels[leaf];
 	}
-	ss<<endl;
+	ss << endl;
 	PCTreeNodeSet<> cons(*tree);
 	for (const auto& row : restr) {
 		cons.clear();
@@ -193,6 +192,17 @@ string getAllOrders() {
 	return ss.str();
 }
 
+struct DrawingParams {
+	int radius = 200;
+	int levelHeight = 80;
+	int nodeSize = 40;
+	int nodePadding = 30;
+};
+
+DrawingParams drawing_params;
+
+DrawingParams* getDrawingParams() { return &drawing_params; }
+
 string draw(Drawer* drawer) {
 	if (!tree) {
 		return "";
@@ -200,6 +210,7 @@ string draw(Drawer* drawer) {
 
 	Layout positions(*tree);
 	stringstream ss;
+	drawer->node_size = drawing_params.nodeSize;
 	if (dynamic_cast<CircularDrawer*>(drawer)) {
 		PCTreeNodeArray<double> weights(*tree);
 		// TODO improve line length ratios by using better weights
@@ -207,21 +218,23 @@ string draw(Drawer* drawer) {
 		// for (auto node : tree->allNodes()) {
 		//   weights[node] = max_weight - weights[node] + 1;
 		// }
-		computePositionsCircular(*tree, positions, 200, nullptr);
+		computePositionsCircular(*tree, positions, drawing_params.radius, nullptr);
 
 		CircularDrawer& cdrawer = *dynamic_cast<CircularDrawer*>(drawer);
 		cdrawer.labels = &labels;
-		cdrawer.radius = 200;
+		cdrawer.radius = drawing_params.radius;
 		cdrawer.draw(*tree, positions, ss);
 	} else {
 		PCTreeNodeArray<double> widths(*tree);
-		auto [width, height] = computePositionsLinear(*tree, positions, &widths, 80, 70, 0, -79);
+		auto [width, height] = computePositionsLinear(*tree, -drawing_params.nodePadding + 1,
+				-drawing_params.levelHeight + 1, positions, &widths, drawing_params.levelHeight,
+				drawing_params.nodeSize, drawing_params.nodePadding);
 
 		LinearDrawer& ldrawer = *dynamic_cast<LinearDrawer*>(drawer);
 		ldrawer.labels = &labels;
 		ldrawer.widths = &widths;
-		ldrawer.width = width;
-		ldrawer.height = height - 119;
+		ldrawer.width = width + 2;
+		ldrawer.height = height - 2 * drawing_params.levelHeight + drawing_params.nodeSize + 2;
 		ldrawer.draw(*tree, positions, ss);
 	}
 
@@ -268,4 +281,13 @@ EMSCRIPTEN_BINDINGS(PCTreeModule) {
 	emscripten::function("drawSVG", &drawSVG);
 	emscripten::function("drawIPE", &drawIPE);
 	emscripten::function("drawTikz", &drawTikz);
+
+	emscripten::class_<DrawingParams>("DrawingParams")
+			.property("radius", &DrawingParams::radius)
+			.property("nodeSize", &DrawingParams::nodeSize)
+			.property("levelHeight", &DrawingParams::levelHeight)
+			.property("nodePadding", &DrawingParams::nodePadding);
+
+	emscripten::function("getDrawingParams", &getDrawingParams,
+			emscripten::return_value_policy::reference());
 }
