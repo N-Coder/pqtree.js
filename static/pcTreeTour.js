@@ -47,8 +47,8 @@ const tg = new tourguide.TourGuideClient({
         content: `We will model this problem through a <i>binary matrix</i>, where the <i>columns</i> correspond to the students for which we want to find a seating order.
             We add one <i>row</i> for each group of people that want to be seated together, setting exactly their entries in the row to 1.
             The problem is now to find a reordering of the columns of the matrix such that, in every row, all ones are <i>consecutive</i>.
-            This problem is also known as <a target="_blank" href="https://doi.org/10.1016/S0022-0000(76)80045-1">Consecutive 1's Problem (C1P)</a>.<br/><br/>
-
+            This problem is also known as <a target="_blank" href="https://doi.org/10.1016/S0022-0000(76)80045-1">Consecutive 1's Problem (C1P)</a>.<br/>
+            <img src="assets/matrix.svg"/><br/>
             You can try finding such orders yourself by dragging the column headings left and right, but we'll look at more systematic way to do this in a second.
             You can also toggle entries by clicking on them.
             Recall that you can also undo changes to the matrix and/or go back to the previous tutorial step using your browser's back button.`,
@@ -66,7 +66,8 @@ const tg = new tourguide.TourGuideClient({
             Its leaves correspond to the elements we want to order.
             They are connected through two different types of inner nodes that describe how the leaves can be reordered:
             The first type are the round <i>P-nodes</i>, which allow arbitrarily changing the order of their children.
-            So this tree that we will start with allows all permutations of students, with no regard to their seating preferences.`,
+            So this tree that we will start with allows all permutations of students, with no regard to their seating preferences.
+            We will now add back all of the constraints seen in the previous step one by one, that is, row by row, and update the tree accordingly.`,
         beforeEnter: setMatrix([
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
         ])
@@ -111,9 +112,9 @@ const tg = new tourguide.TourGuideClient({
             While round <i>P-nodes</i> allow arbitrarily changing the order of their children, rectangular <i>Q-nodes</i> only allow reversing the order of their children.<br/><br/>
             
             The new Q-node now ensures that we have first the <tt>e,a</tt> couple, joined by the best friends <tt>a,h</tt> with the <tt>h,g</tt> couple, and then the rest of the <tt>g,h,b,c,f</tt> group in arbitrary order.
-            Due to the couples and best friends, we can only reverse this order.
+            Note that, due to the two couples and best friends inbetween, this order and its reversal are the only ones possible.
             Note that in any order, the <tt>b,c,f,g,h</tt> group still sits together.
-            In the end, we'll shortly talk about the algorithm used to make these updates correctly.`,
+            In the end, we'll shortly talk about the actual algorithm used to find these updates.`,
         beforeEnter: setMatrix([
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 1, 0, 0, 1, 1, 1, 0],
@@ -196,10 +197,10 @@ const tg = new tourguide.TourGuideClient({
     }, {
         title: "The End",
         content: `This concludes the tour of this site.
-        We've seen that the (Circular) Consecutive 1's Problem can efficiently be solved (in linear time even!),
-        and that, if there are orders that satisfy all constraints, we can easily enumerate them.
+        We've seen that the (Circular) Consecutive 1's Problem can efficiently be solved (in <a target="_blank" href="https://doi.org/10.1016/S0304-3975(02)00435-8">linear time</a> even!),
+        and that, if there are orders that satisfy all constraints, we can easily enumerate them by permuting P-nodes and flipping (C-) Q-nodes.
         If you want to learn more about PQ- & PC-trees, especially how a tree updated with new constraints is computed,
-        you can also check out this <a target="_blank" href="https://tryalgo.org/en/data%20structures/2024/01/03/pc-trees/">tryalgo article</a>
+        you can check out this <a target="_blank" href="https://tryalgo.org/en/data%20structures/2024/01/03/pc-trees/">tryalgo article</a>
         (or its <a target="_blank" href="https://tryalgo.org/en/data%20structures/2017/12/15/pq-trees/">prior version</a> focusing on PQ-trees).
         PQ-trees were initially introduced by 
             <a target="_blank" href="https://doi.org/10.1016/S0022-0000(76)80045-1">Booth and Lueker</a>
