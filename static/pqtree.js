@@ -15,7 +15,7 @@ if (window.NodeList) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-let data = [];
+let data = [[0, 0]];
 let titles = [];
 
 let dragSrcCell = null;
@@ -70,7 +70,7 @@ function buildTable() {
     // make header
     let hrow = thead.insertRow();
     let cell = hrow.insertCell(); // title column
-    for (let i = 0; i < data[0].length; i++) {
+    for (let i = 0; data && i < data[0].length; i++) {
         let cell = hrow.insertCell();
         cell.classList.add('col-title');
         cell.innerHTML = titles[i];
@@ -435,8 +435,9 @@ function readURL() {
         let vars = {};
         for (let i = 0; i < parts.length; i++) {
             const pair = parts[i].split('=');
-            if (pair.length == 1 && parts.length == 1) {
-                vars["mat"] = pair[0];
+            if (pair.length == 1) {
+                vars["mat"] = parts.join("|");
+                break;
             } else {
                 vars[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
             }
