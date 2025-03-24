@@ -24,7 +24,7 @@ const tg = new tourguide.TourGuideClient({
             If you already know your way around, feel free to close this.<br/><br/>
             To go back to this tutorial once closed or to undo changes to the matrix, use your browser's back button.
             You can also always restart the tutorial by clicking this button.
-            To go back and forth in the tutorial, use the arrow keys.`,
+            To go back and forth in the tutorial, use the arrow keys on your keyboard.`,
         afterEnter: writeURL
     }, {
         title: "The Problem",
