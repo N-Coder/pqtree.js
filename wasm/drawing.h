@@ -66,7 +66,7 @@ struct LinearDrawer : virtual Drawer {
 
 	void draw(const PCTree& tree, const Layout& positions, std::ostream& ss) override;
 
-	virtual std::tuple<std::string, double> getTrianglePath(double cx, double cy, double sideLength);
+	virtual std::tuple<std::string, double> getTrianglePath(double cx, double cy, double size);
 
 	virtual std::tuple<double, double, double, double> getQNodeSize(PCNode* node,
 			const Layout& positions);

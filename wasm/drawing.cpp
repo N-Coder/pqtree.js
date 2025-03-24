@@ -44,14 +44,13 @@ void LinearDrawer::draw(const PCTree& tree, const Layout& positions, std::ostrea
 	cur_tree = nullptr;
 }
 
-std::tuple<std::string, double> LinearDrawer::getTrianglePath(double cx, double cy,
-		double sideLength) {
+std::tuple<std::string, double> LinearDrawer::getTrianglePath(double cx, double cy, double size) {
 	double ratio = 0.866; // equilateral triangle
 	std::stringstream points;
 	points << cx << "," << cy << " ";
-	points << cx - sideLength / 2 << "," << cy + sideLength * ratio << " ";
-	points << cx + sideLength / 2 << "," << cy + sideLength * ratio;
-	double mid_y = cy + 0.69 * sideLength * ratio;
+	points << cx - size / ratio / 2 << "," << cy + size << " ";
+	points << cx + size / ratio / 2 << "," << cy + size;
+	double mid_y = cy + 0.69 * size;
 	return {points.str(), mid_y};
 }
 
