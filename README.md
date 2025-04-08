@@ -6,10 +6,12 @@ the [Hsu-McConnell algorithm](https://doi.org/10.1016/S0304-3975(02)00435-8) for
 producing [PQ-/PC-trees](https://en.wikipedia.org/wiki/PQ_tree) for the (circular) consecutive ones problem.
 See the paper "[Experimental Comparison of PC-Trees and PQ-Trees](https://arxiv.org/abs/2106.14805)" by Fink et al. for
 more details on this implementation.
+This project was initiated by [Dominik Peters](https://dominik-peters.de),
+with some updates by [Simon D. Fink](https://github.com/N-Coder).
 
-## Graphical Online Version available at [pref.tools/pqtree](https://pref.tools/pqtree)
+## Graphical Online Version available at [n-coder.github.io/pqtree.js](https://n-coder.github.io/pqtree.js)
 
-[![Screenshot of the Website](./screenshot.png)](https://pref.tools/pqtree)
+[![Screenshot of the Website](./screenshot.png)](n-coder.github.io/pqtree.js)
 
 The online version is also automatically built by [CI](../../actions).
 
@@ -24,7 +26,7 @@ To build the emscripten version, assuming emscripten is installed so `emcc` is c
 Use it as follows in HTML:
 
 ```HTML
-<script src="pqtree.js"></script>
+<script src="libPCTree.js"></script>
 <script>
     var Module = {
         onRuntimeInitialized: function () {
