@@ -4,10 +4,17 @@ An [emscripten](https://emscripten.org/)/WebAssembly version of
 the [UFPC implementation](https://github.com/N-Coder/pc-tree/) of
 the [Hsu-McConnell algorithm](https://doi.org/10.1016/S0304-3975(02)00435-8) for
 producing [PQ-/PC-trees](https://en.wikipedia.org/wiki/PQ_tree) for the (circular) consecutive ones problem.
-See the paper "[Experimental Comparison of PC-Trees and PQ-Trees](https://arxiv.org/abs/2106.14805)" by Fink et al. for
-more details on this implementation.
+Try out the interactive tutorial on the site to learn more about these trees and see the
+paper "[Experimental Comparison of PC-Trees and PQ-Trees](https://arxiv.org/abs/2106.14805)" by Fink et al. for
+more details on their implementation.
 This project was initiated by [Dominik Peters](https://dominik-peters.de),
 with some updates by [Simon D. Fink](https://github.com/N-Coder).
+If this was useful to you, you can cite the accompanying publication:
+
+> Simon D. Fink and Dominik Peters.
+> *Incremental and Interactive PQ- and PC-Trees* (Media Exposition).
+> 41st International Symposium on Computational Geometry (SoCG 2025).
+> https://doi.org/10.4230/LIPIcs.SoCG.2025.84
 
 ## Graphical Online Version available at [n-coder.github.io/pqtree.js](https://n-coder.github.io/pqtree.js)
 

@@ -207,7 +207,9 @@ const tg = new tourguide.TourGuideClient({
         and PC-trees by 
             <a target="_blank" href="https://doi.org/10.1016/S0304-3975(02)00435-8">Hsu and McConnell</a>.
         A more modern explanation of both data structures, their workings and their differences can be found starting on page 10 of this
-            <a target="_blank" href="https://doi.org/10.15475/cpatp.2024">thesis</a>.<br/><br/>
+            <a target="_blank" href="https://doi.org/10.15475/cpatp.2024">thesis</a>.
+        More backgrounds about this site can be found in the
+            <a target="_blank" href="https://doi.org/10.4230/LIPIcs.SoCG.2025.84">accompanying paper</a>.<br/><br/>
         <details>
             <summary>Some more hints...</summary>
             You can add new columns and rows by clicking on the plus buttons, dragging a column or row onto this button (which turns into a red X) deletes it.
